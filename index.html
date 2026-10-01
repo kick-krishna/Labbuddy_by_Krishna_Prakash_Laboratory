@@ -1,889 +1,237 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LabBuddy - Krishna Prakash Laboratory</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-grad: linear-gradient(135deg, #008080 0%, #004d4d 100%);
-            --accent-color: #00a896;
-            --accent-hover: #028090;
-            --bg-grad: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
-            --chat-bg: #f8fafc;
-            --user-msg: linear-gradient(135deg, #008080 0%, #005959 100%);
-            --bot-msg: #ffffff;
-            --text-main: #2d3748;
-            --text-muted: #718096;
-            --border-color: #e2e8f0;
-            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-        }
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 
-        body {
-            background: var(--bg-grad);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 12px;
-        }
+<title>Krishna Prakash Lab - Enhanced Data Updater</title>
 
-        .chat-app {
-            width: 100%;
-            max-width: 480px;
-            height: 94vh;
-            max-height: 820px;
-            background: var(--chat-bg);
-            border-radius: 24px;
-            box-shadow: var(--shadow-lg);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-        }
+<style>
 
-        /* Header */
-        .chat-header {
-            background: var(--primary-grad);
-            color: white;
-            padding: 18px 20px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            box-shadow: var(--shadow-md);
-            z-index: 10;
-        }
+:root{--mint:#eef7e8;--soft:#d6edcf;--primary:#3fa34d;--dark:#2b7a37;--lime:#a8d672;--llime:#e5f4d8;--text:#1f3b24;--muted:#5f7a63;--red:#d64545;--redbg:#fdecec;--orange:#f0a04b;--shadow:0 8px 28px rgba(43,122,55,.12)}
 
-        .avatar-container {
-            position: relative;
-        }
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:Segoe UI,Arial,sans-serif;color:var(--text);min-height:100vh;background:linear-gradient(135deg,var(--mint),var(--soft) 55%,var(--llime));background-attachment:fixed}.hidden{display:none!important}.card,.modal{background:rgba(255,255,255,.82);border:1px solid #fff;border-radius:16px;box-shadow:var(--shadow);padding:22px}h1{color:var(--dark);font-size:26px}h2{font-size:18px;color:var(--dark);margin-bottom:14px}h3{font-size:15px;color:var(--dark);margin:10px 0}.btn{border:0;border-radius:10px;padding:10px 16px;font-weight:650;cursor:pointer;background:var(--primary);color:white}.btn:hover{background:var(--dark)}.btn.light{background:var(--llime);color:var(--dark);border:1px solid var(--lime)}.btn.danger{background:var(--red)}.btn.sm{padding:6px 10px;font-size:12px}.badge,.chip{display:inline-block;padding:5px 11px;border-radius:20px;background:var(--llime);border:1px solid var(--lime);font-size:12px;font-weight:650;color:var(--dark)}.chip{cursor:pointer;background:white}.chip.on{background:var(--primary);color:white;border-color:var(--primary)}
 
-        .avatar {
-            width: 48px;
-            height: 48px;
-            background: white;
-            color: #008080;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
+#landing{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}.welcome{max-width:650px;width:100%;text-align:center;padding:44px}.logo{width:68px;height:68px;border-radius:18px;margin:0 auto 15px;background:linear-gradient(135deg,var(--primary),var(--lime));display:grid;place-items:center;color:white;font-size:32px}.welcome p{color:var(--muted);margin:8px 0 28px}.login-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.login-tile{background:white;border:2px solid var(--soft);border-radius:14px;padding:26px;cursor:pointer}.login-tile:hover{border-color:var(--primary)}.overlay{position:fixed;inset:0;background:#1f3b2466;display:flex;align-items:center;justify-content:center;z-index:80;padding:15px}.modal{background:white;width:100%;max-width:470px;max-height:92vh;overflow:auto}.modal.wide{max-width:1050px}.modal-head,.toolbar,.tbl-tools,.form-actions,.filters{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.x{border:0;background:none;font-size:24px;cursor:pointer}header{position:sticky;top:0;z-index:30;background:#ffffffdd;padding:12px 22px;border-bottom:1px solid var(--soft);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.brand{display:flex;align-items:center;gap:9px;font-weight:700;color:var(--dark)}.brand .logo{width:38px;height:38px;font-size:18px;margin:0;border-radius:10px}.hdr-actions{display:flex;gap:7px;flex-wrap:wrap}main{max-width:1450px;margin:auto;padding:22px;display:flex;flex-direction:column;gap:20px}.filters{justify-content:flex-start;margin-bottom:15px;align-items:flex-end}.fg{display:flex;flex-direction:column;gap:5px}.fg.full{grid-column:1/-1}label{font-size:12px;font-weight:700;color:var(--dark);text-transform:uppercase}input,select,textarea{border:1.5px solid var(--soft);border-radius:10px;padding:10px 12px;font:inherit;background:white;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--primary)}textarea{min-height:48px}.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px 18px}.form-actions{justify-content:flex-start;margin-top:17px}.err{color:var(--red);font-size:13px;min-height:18px;margin-top:7px}.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:13px;margin-bottom:15px}.kpi{background:white;border-radius:13px;padding:15px;border-left:5px solid var(--primary)}.kpi.loss{border-left-color:var(--red)}.kpi small{color:var(--muted);text-transform:uppercase}.kpi div{font-size:21px;font-weight:750;margin-top:4px}.grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}.panel{background:white;border-radius:13px;padding:15px}.tbl-wrap{overflow:auto;max-height:430px;background:white;border-radius:12px}table{width:100%;border-collapse:collapse;font-size:13px}th{position:sticky;top:0;background:var(--dark);color:white;padding:10px 8px;text-align:left;white-space:nowrap}td{padding:9px 8px;border-bottom:1px solid var(--mint);white-space:nowrap}tbody tr:nth-child(even){background:#fafdf8}tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--llime)}.num{text-align:right}.neg{color:var(--red);font-weight:700}.pos{color:var(--primary);font-weight:700}.empty{text-align:center;color:var(--muted);padding:25px!important}.search{min-width:260px}.note{font-size:12px;color:var(--muted);margin-top:8px}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:15px}.tab.on{background:var(--dark)}#toast{position:fixed;right:22px;bottom:22px;background:var(--dark);color:white;padding:12px 18px;border-radius:10px;opacity:0;transform:translateY(15px);transition:.2s;z-index:100}#toast.show{opacity:1;transform:none}#toast.bad{background:var(--red)}.filter-panel{background:#f8fff5;border:1px solid var(--soft);padding:12px;border-radius:12px;margin-bottom:12px}.check{display:flex;align-items:center;gap:7px}.check input{width:auto}.config-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px}
 
-        .online-status {
-            width: 12px;
-            height: 12px;
-            background: #10b981;
-            border: 2px solid white;
-            border-radius: 50%;
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-        }
+/* ===== Enhancements: charts ===== */
 
-        .header-title h1 {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-        }
+.mb{margin-bottom:16px}tfoot td{position:sticky;bottom:0;background:var(--llime);font-weight:750;border-top:2px solid var(--lime)}
 
-        .header-title p {
-            font-size: 12px;
-            opacity: 0.9;
-            margin-top: 2px;
-        }
+.chart-scroll{overflow-x:auto;padding-bottom:4px}.chart-scroll svg{display:block}
 
-        /* Messages */
-        .chat-messages {
-            flex: 1;
-            padding: 20px 16px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            scroll-behavior: smooth;
-        }
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:2px 0 8px}.legend span{display:inline-flex;align-items:center;gap:5px}.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
 
-        .message {
-            max-width: 88%;
-            padding: 14px 18px;
-            border-radius: 20px;
-            font-size: 14px;
-            line-height: 1.55;
-            word-wrap: break-word;
-            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-        }
+.hbars{display:flex;flex-direction:column;gap:7px;max-height:340px;overflow:auto;padding-right:4px}.hrow{display:grid;grid-template-columns:minmax(110px,190px) 1fr minmax(110px,auto);gap:10px;align-items:center;font-size:13px}.hl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}.htrack{background:var(--mint);border-radius:6px;height:18px;overflow:hidden}.hbar{height:100%;border-radius:6px;transition:width .4s}.hv{text-align:right;font-weight:700;white-space:nowrap}.hv small{font-weight:500;color:var(--muted);margin-left:5px}
 
-        @keyframes popIn {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
+.tabdata{margin-bottom:14px;border:1px solid var(--soft)}.kpis.mini{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin:8px 0 10px}.kpis.mini .kpi{padding:10px;background:#f8fff5}.kpis.mini .kpi div{font-size:17px}
 
-        .message.bot {
-            background: var(--bot-msg);
-            color: var(--text-main);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
-            border: 1px solid #edf2f7;
-        }
+/* ===== Referred By suggestions + Entered By lock ===== */
 
-        .message.user {
-            background: var(--user-msg);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0, 128, 128, 0.25);
-        }
+#entryForm .fg{position:relative}.ac-list{position:absolute;top:100%;left:0;right:0;z-index:40;background:#fff;border:1.5px solid var(--primary);border-radius:10px;margin-top:3px;max-height:230px;overflow:auto;box-shadow:var(--shadow)}.ac-item{padding:8px 12px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;gap:8px}.ac-item:hover,.ac-item.on{background:var(--llime)}.ac-item small{color:var(--muted)}.ac-new{color:var(--dark);font-style:italic}input[readonly]{background:#f3f8f0;cursor:not-allowed}
 
-        .message strong {
-            color: inherit;
-        }
+@media(max-width:900px){.grid2,.login-grid{grid-template-columns:1fr}.config-row{grid-template-columns:1fr 1fr}.search{min-width:180px}.hrow{grid-template-columns:100px 1fr auto}}
 
-        .message a {
-            color: #028090;
-            font-weight: 600;
-            word-break: break-all;
-        }
+</style>
 
-        .message.user a {
-            color: #e2e8f0;
-        }
+</head><body>
 
-        .message-time {
-            font-size: 10px;
-            opacity: 0.65;
-            margin-top: 6px;
-            text-align: right;
-            display: block;
-        }
+<section id="landing"><div class="card welcome"><div class="logo">?</div><h1>Welcome to Krishna Prakash Lab</h1><p>Enhanced Data Updater</p><div class="login-grid"><div class="login-tile" onclick="chooseRole('admin')">???<br><b>Admin Login</b><br><small>Full control and configuration</small></div><div class="login-tile" onclick="chooseRole('emp')">??<br><b>EMP Login</b><br><small>Enter and edit data</small></div></div></div></section>
 
-        /* Interactive Card Inside Message */
-        .ui-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 14px;
-            margin-top: 10px;
-        }
+<div class="overlay hidden" id="pwdModal"><div class="modal"><div class="modal-head"><h2 id="pwdTitle">Login</h2><button class="x" onclick="closeModal('pwdModal')">×</button></div><div class="fg"><label>Password</label><input type="password" id="pwdInput"></div><div class="err" id="pwdErr"></div><div class="form-actions"><button class="btn" onclick="doLogin()">Login</button><button class="btn light" onclick="closeModal('pwdModal')">Cancel</button></div></div></div>
 
-        .ui-card-title {
-            font-weight: 700;
-            color: #008080;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+<section id="app" class="hidden"><header><div class="brand"><div class="logo">?</div>Krishna Prakash Lab <span class="badge" id="roleBadge"></span></div><div class="hdr-actions"><button class="btn admin-only" onclick="exportExcel()">?? Export All</button><button class="btn admin-only light" onclick="excelFile.click()">? Import Excel</button><input class="hidden" type="file" id="excelFile" accept=".xls,.xml,.xlsx" onchange="importExcel(this)"><button class="btn admin-only light" onclick="openStore('spends')">?? Spends</button><button class="btn admin-only light" onclick="openBuilder()">? Manage Fields/Tabs</button><button class="btn admin-only light" onclick="downloadSnapshot()">?? Download Updated HTML</button><button class="btn danger" onclick="logout()">? Logout</button></div></header>
 
-        /* Test Search & Multi-Select UI */
-        .test-search-box {
-            position: relative;
-            margin-bottom: 10px;
-        }
+<main><div class="tabs" id="customTabs"></div>
 
-        .test-search-input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1.5px solid var(--border-color);
-            border-radius: 10px;
-            font-size: 13px;
-            outline: none;
-            transition: all 0.2s;
-        }
+ 
 
-        .test-search-input:focus {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(0, 168, 150, 0.15);
-        }
+<div class="card admin-only"><h2>?? Dashboard</h2>
 
-        .dropdown-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            max-height: 160px;
-            overflow-y: auto;
-            z-index: 100;
-            box-shadow: var(--shadow-md);
-            display: none;
-            margin-top: 4px;
-        }
+<div class="filters">
 
-        .dropdown-item {
-            padding: 9px 12px;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #f7fafc;
-        }
+<div class="fg"><label>Period</label><select id="periodMode" onchange="renderAll()"><option value="all">All time</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
 
-        .dropdown-item:hover {
-            background-color: #e6f2f2;
-            color: #008080;
-        }
+<div class="fg"><label>Selected date/month</label><input type="date" id="periodDate" onchange="renderAll()"></div>
 
-        .selected-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 12px;
-            max-height: 100px;
-            overflow-y: auto;
-        }
+<div class="fg"><label>Referred by</label><select id="dashRef" onchange="renderAll()"></select></div>
 
-        .tag {
-            background: #e6f2f2;
-            color: #005959;
-            font-size: 12px;
-            padding: 5px 10px;
-            border-radius: 16px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 600;
-        }
+<div class="fg"><label>Spend classification</label><select id="dashCls" onchange="renderAll()"></select></div>
 
-        .tag .remove-tag {
-            cursor: pointer;
-            font-size: 14px;
-            color: #008080;
-        }
+<div class="fg"><label>View by</label><select id="groupBy" onchange="renderAll()"><option value="month">Month</option><option value="week">Week</option><option value="day">Day</option></select></div>
 
-        .tag .remove-tag:hover {
-            color: #e53e3e;
-        }
+<button class="btn light" onclick="resetDash()">Reset</button>
 
-        /* Booking Form Styles */
-        .form-group {
-            margin-bottom: 10px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: #4a5568;
-            margin-bottom: 4px;
-        }
-
-        .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 9px 12px;
-            border: 1.5px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 13px;
-            outline: none;
-        }
-
-        .form-group input:focus, .form-group textarea:focus {
-            border-color: var(--accent-color);
-        }
-
-        .btn-submit {
-            width: 100%;
-            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-            color: white;
-            border: none;
-            padding: 11px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
-            transition: transform 0.2s;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-1px);
-        }
-
-        /* Action Menu Chips */
-        .quick-actions {
-            padding: 10px 16px;
-            background: white;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            white-space: nowrap;
-            scrollbar-width: none;
-        }
-
-        .quick-actions::-webkit-scrollbar {
-            display: none;
-        }
-
-        .chip-btn {
-            background: #f0fdf4;
-            color: #008080;
-            border: 1.5px solid #b2f5ea;
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-
-        .chip-btn:hover {
-            background: #008080;
-            color: white;
-            border-color: #008080;
-        }
-
-        /* Footer Input Area */
-        .chat-input-container {
-            padding: 12px 16px;
-            background: white;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 12px 18px;
-            border: 1.5px solid var(--border-color);
-            border-radius: 25px;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.2s;
-            background: #f8fafc;
-        }
-
-        .chat-input:focus {
-            border-color: var(--accent-color);
-            background: white;
-            box-shadow: 0 0 0 3px rgba(0, 168, 150, 0.1);
-        }
-
-        .send-btn {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background: var(--primary-grad);
-            color: white;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            box-shadow: 0 4px 10px rgba(0, 128, 128, 0.3);
-            transition: all 0.2s;
-        }
-
-        .send-btn:hover {
-            transform: scale(1.05);
-        }
-
-        .price-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px dashed #e2e8f0;
-        }
-
-        .price-total {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0 0 0;
-            font-weight: bold;
-            font-size: 15px;
-            color: #008080;
-        }
-    </style>
-</head>
-<body>
-
-<div class="chat-app">
-    <!-- Header -->
-    <div class="chat-header">
-        <div class="avatar-container">
-            <div class="avatar"><i class="fa-solid fa-user-doctor"></i></div>
-            <div class="online-status"></div>
-        </div>
-        <div class="header-title">
-            <h1>LabBuddy</h1>
-            <p>Krishna Prakash Laboratory 🩺</p>
-        </div>
-    </div>
-
-    <!-- Chat Stream -->
-    <div class="chat-messages" id="chatMessages"></div>
-
-    <!-- Quick Options Menu -->
-    <div class="quick-actions">
-        <button class="chip-btn" onclick="triggerAction('1')"><i class="fa-solid fa-calculator"></i> Price Calculate</button>
-        <button class="chip-btn" onclick="triggerAction('2')"><i class="fa-solid fa-house-medical"></i> Home Collection</button>
-        <button class="chip-btn" onclick="triggerAction('3')"><i class="fa-solid fa-circle-question"></i> Queries</button>
-        <button class="chip-btn" onclick="triggerAction('Menu')"><i class="fa-solid fa-bars"></i> Main Menu</button>
-    </div>
-
-    <!-- Input Footer -->
-    <div class="chat-input-container">
-        <input type="text" id="userInput" class="chat-input" placeholder="Type a message or option number..." onkeypress="handleKeyPress(event)">
-        <button class="send-btn" onclick="handleSend()"><i class="fa-solid fa-paper-plane"></i></button>
-    </div>
 </div>
 
+<div class="kpis" id="kpis"></div>
+
+ 
+
+<div class="panel mb"><h3 id="plTitle">?? Profit / Loss</h3><div id="plChart"></div></div>
+
+ 
+
+<div class="grid2 mb"><div class="panel"><h3>Period Profit / Loss</h3><div class="tbl-wrap" style="max-height:300px"><table><thead><tr><th>Period</th><th class="num">No. of patients</th><th class="num">Total</th><th class="num">Received</th><th class="num">Balance</th><th class="num">Spends</th><th class="num">Profit / Loss</th></tr></thead><tbody id="periodBody"></tbody><tfoot id="periodFoot"></tfoot></table></div></div><div class="panel"><h3>Summary</h3><div id="summary"></div></div></div>
+
+ 
+
+<div class="grid2 mb"><div class="panel"><h3>?? Spends by Classification</h3><div id="spClsChart"></div></div><div class="panel"><h3 id="spTimeTitle">?? Spends Trend</h3><div id="spTimeChart"></div></div></div>
+
+ 
+
+<div class="panel"><div class="toolbar"><h3>?? Referred By – Largest to Smallest</h3><div style="display:flex;gap:8px;align-items:center"><label>Measure</label><select id="refMetric" onchange="renderDashboard()"><option value="adv">Received (Income)</option><option value="total">Total Value</option><option value="bal">Balance</option><option value="cnt">No. of No. of patients</option></select></div></div><div id="refChart"></div></div>
+
+</div>
+
+ 
+
+<div class="card"><div class="tbl-tools"><h2>?? Live Data <span class="badge" id="recCount"></span></h2><div class="toolbar"><button class="btn light" onclick="toggleFilters()">?? Filters</button><button class="btn light" id="balanceBtn" onclick="toggleBalance()">Balance</button><input class="search" id="search" placeholder="Search all data" oninput="renderTable()"></div></div><div id="filterPanel" class="filter-panel hidden"><div class="form-grid"><div class="fg"><label>From date</label><input type="date" id="fltFrom" onchange="renderTable()"></div><div class="fg"><label>To date</label><input type="date" id="fltTo" onchange="renderTable()"></div><div class="fg"><label>Referred by</label><select id="fltRef" onchange="renderTable()"></select></div><div class="fg"><label>Entered by</label><select id="fltBy" onchange="renderTable()"></select></div><div class="fg"><label>Minimum total</label><input type="number" id="fltMin" oninput="renderTable()"></div><div class="fg"><label>Maximum total</label><input type="number" id="fltMax" oninput="renderTable()"></div></div><div class="form-actions"><button class="btn light" onclick="clearTableFilters()">Clear filters</button></div></div><div class="tbl-wrap"><table><thead><tr id="recHead"></tr></thead><tbody id="recBody"></tbody></table></div></div>
+
+<div class="card"><h2 id="formTitle">?? New Entry</h2><div class="form-grid" id="entryForm"></div><div class="err" id="formErr"></div><div class="form-actions"><button class="btn" onclick="saveRecord()">?? Save</button><button class="btn light" onclick="resetForm()">Clear</button></div></div>
+
+ 
+
+<div class="card admin-only" id="customSection"><h2>?? Custom Tabs Data <span class="badge" id="tabCount"></span></h2><p class="note" style="margin:-6px 0 12px">Every tab added via "Manage Fields/Tabs" appears here automatically for Admin (including EMP-only tabs). Tabs with a date column follow the Dashboard Period filter.</p><div id="adminTabsData"></div></div>
+
+</main></section>
+
+<div class="overlay hidden" id="storeModal"><div class="modal wide"><div class="modal-head"><h2 id="storeTitle"></h2><button class="x" onclick="closeModal('storeModal')">×</button></div><div class="form-grid" id="storeForm"></div><div class="err" id="storeErr"></div><div class="form-actions"><button class="btn" onclick="saveStoreItem()">Save</button><button class="btn light" onclick="resetStoreForm()">Clear</button></div><div class="tbl-wrap" style="margin-top:15px"><table><thead><tr id="storeHead"></tr></thead><tbody id="storeBody"></tbody></table></div></div></div>
+
+<div class="overlay hidden" id="builderModal"><div class="modal wide"><div class="modal-head"><h2>? Admin Field and Storage Manager</h2><button class="x" onclick="closeModal('builderModal')">×</button></div><h3>Add an entry field</h3><div class="config-row"><div class="fg"><label>Field name</label><input id="newFieldName" placeholder="e.g. Age"></div><div class="fg"><label>Type</label><select id="newFieldType"><option>text</option><option>number</option><option>date</option><option>select</option></select></div><div class="fg"><label>Visible to</label><select id="newFieldRole"><option value="both">Both</option><option value="emp">EMP only</option><option value="admin">Admin only</option></select></div><button class="btn" onclick="addField()">Add</button></div><div id="fieldList"></div><hr style="margin:18px 0;border:0;border-top:1px solid var(--soft)"><h3>Add a storage tab</h3><div class="config-row"><div class="fg"><label>Tab name</label><input id="newTabName" placeholder="e.g. Check"></div><div class="fg"><label>Columns, comma-separated</label><input id="newTabCols" placeholder="Check Number, Amount, Start Date, End Date, Paid"></div><div class="fg"><label>Visible to</label><select id="newTabRole"><option value="both">Both</option><option value="emp">EMP only</option><option value="admin">Admin only</option></select></div><button class="btn" onclick="addTab()">Add</button></div><div id="tabList"></div></div></div>
+
+<div id="toast"></div>
+
+<script id="seed-data" type="application/json">{"records":[],"spends":[],"customFields":[],"customTabs":[],"customData":{}}</script>
+
 <script>
-    // Database from Prices.xlsx
-    const PRICE_DATABASE = [
-        {"classification": "Haematology", "alternate": "TC", "technical": "TC", "amount": "50"},
-        {"classification": "Haematology", "alternate": "DC", "technical": "DC", "amount": "50"},
-        {"classification": "Haematology", "alternate": "ESR", "technical": "ESR", "amount": "50"},
-        {"classification": "Haematology", "alternate": "Hb", "technical": "Hb", "amount": "100"},
-        {"classification": "Haematology", "alternate": "PCV", "technical": "PCV", "amount": "50"},
-        {"classification": "Haematology", "alternate": "BT / CT", "technical": "BT / CT", "amount": "50"},
-        {"classification": "Haematology", "alternate": "RBC Count", "technical": "RBC Count", "amount": "50"},
-        {"classification": "Haematology", "alternate": "Group / Rh-Typing", "technical": "Group / Rh-Typing", "amount": "70"},
-        {"classification": "Haematology", "alternate": "Platelet Count", "technical": "Platelet Count", "amount": "150"},
-        {"classification": "Haematology", "alternate": "Absolute Eosinophil Count", "technical": "Absolute Eosinophil Count", "amount": "150"},
-        {"classification": "Haematology", "alternate": "Peripheral Smear Study", "technical": "Peripheral Smear Study", "amount": "TBD"},
-        {"classification": "Haematology", "alternate": "Complete Haemogram", "technical": "Complete Haemogram", "amount": "500"},
-        {"classification": "Haematology", "alternate": "CBC", "technical": "Complete Haemogram", "amount": "500"},
-        {"classification": "Haematology", "alternate": "PT / INR", "technical": "PT / INR", "amount": "400"},
-        {"classification": "Haematology", "alternate": "MP & MF", "technical": "MP & MF", "amount": "50"},
-        {"classification": "Bio-Chemistry", "alternate": "Sugar Fasting", "technical": "Blood Sugar (F)", "amount": "40"},
-        {"classification": "Bio-Chemistry", "alternate": "Sugar (PP)", "technical": "Blood Sugar (PP)", "amount": "40"},
-        {"classification": "Bio-Chemistry", "alternate": "Random Sugar", "technical": "Blood Sugar (R)", "amount": "50"},
-        {"classification": "Bio-Chemistry", "alternate": "Urea", "technical": "Blood Urea", "amount": "150"},
-        {"classification": "Bio-Chemistry", "alternate": "Serum Cholesterol", "technical": "Serum Cholesterol", "amount": "200"},
-        {"classification": "Bio-Chemistry", "alternate": "Serum Creatinine", "technical": "Serum Creatinine", "amount": "150"},
-        {"classification": "Bio-Chemistry", "alternate": "Serum Uric Acid", "technical": "Serum Uric Acid", "amount": "200"},
-        {"classification": "Bio-Chemistry", "alternate": "G.T.T.", "technical": "G.T.T.", "amount": "TBD"},
-        {"classification": "Bio-Chemistry", "alternate": "Albumin", "technical": "Albumin", "amount": "100"},
-        {"classification": "Bio-Chemistry", "alternate": "Serum ALP", "technical": "Serum ALP", "amount": "150"},
-        {"classification": "Bio-Chemistry", "alternate": "Serum Calcium", "technical": "Serum Calcium", "amount": "200"},
-        {"classification": "Bio-Chemistry", "alternate": "Serum Bilirubin (Total)", "technical": "Serum Bilirubin (Total)", "amount": "75"},
-        {"classification": "Bio-Chemistry", "alternate": "Serum Bilirubin (Direct)", "technical": "Serum Bilirubin (Direct)", "amount": "75"},
-        {"classification": "Bio-Chemistry", "alternate": "SGOT / SGPT", "technical": "SGOT / SGPT", "amount": "300"},
-        {"classification": "Bio-Chemistry", "alternate": "Prolactin", "technical": "Prolactin", "amount": "400"},
-        {"classification": "Bio-Chemistry", "alternate": "Electrolytes", "technical": "Electrolytes", "amount": "400"},
-        {"classification": "Serology", "alternate": "VDRL", "technical": "VDRL", "amount": "200"},
-        {"classification": "Serology", "alternate": "ASO", "technical": "ASO", "amount": "200"},
-        {"classification": "Serology", "alternate": "Dengue IgG / IgM", "technical": "Dengue IgG / IgM", "amount": "600"},
-        {"classification": "Serology", "alternate": "Chikungunya IgM", "technical": "Chikungunya IgM", "amount": "TBD"},
-        {"classification": "Serology", "alternate": "Malaria pf/pv Antibody", "technical": "Malaria pf/pv Antibody", "amount": "TBD"},
-        {"classification": "Serology", "alternate": "Widal", "technical": "Widal", "amount": "80"},
-        {"classification": "Serology", "alternate": "CRP", "technical": "CRP", "amount": "200"},
-        {"classification": "Serology", "alternate": "RA Factor", "technical": "RA Factor", "amount": "200"},
-        {"classification": "Others", "alternate": "Sputum for AFB", "technical": "Sputum for AFB", "amount": "TBD"},
-        {"classification": "Others", "alternate": "Mantoux", "technical": "Mantoux", "amount": "TBD"},
-        {"classification": "Others", "alternate": "Semen Analysis", "technical": "Semen Analysis", "amount": "TBD"},
-        {"classification": "Clinical Pathology", "alternate": "Urine Complete Analysis", "technical": "Urine Complete Analysis", "amount": "75"},
-        {"classification": "Clinical Pathology", "alternate": "Urine Routine", "technical": "Urine Routine", "amount": "50"},
-        {"classification": "Clinical Pathology", "alternate": "BS / BP", "technical": "BS / BP", "amount": "75"},
-        {"classification": "Clinical Pathology", "alternate": "Stool Routine", "technical": "Stool Routine", "amount": "TBD"},
-        {"classification": "Clinical Pathology", "alternate": "Reducing Substance", "technical": "Reducing Substance", "amount": "TBD"},
-        {"classification": "Clinical Pathology", "alternate": "Gravindex", "technical": "Gravindex", "amount": "TBD"},
-        {"classification": "Culture & Sensitivity", "alternate": "Urine", "technical": "Urine", "amount": "TBD"},
-        {"classification": "Culture & Sensitivity", "alternate": "Motion", "technical": "Motion", "amount": "TBD"},
-        {"classification": "Culture & Sensitivity", "alternate": "Sputum", "technical": "Sputum", "amount": "TBD"},
-        {"classification": "Special Investigations", "alternate": "Thyroid Profile", "technical": "Thyroid Profile", "amount": "TBD"},
-        {"classification": "Special Investigations", "alternate": "Thryoid - T3, T4, TSH", "technical": "T3, T4, TSH", "amount": "300"},
-        {"classification": "Special Investigations", "alternate": "Vitamin D", "technical": "Vitamin D", "amount": "1200"},
-        {"classification": "Special Investigations", "alternate": "Thryoid - FT3", "technical": "FT3,FT4,TSH", "amount": "400"},
-        {"classification": "Special Investigations", "alternate": "LFT", "technical": "LFT", "amount": "500"},
-        {"classification": "Special Investigations", "alternate": "KFT", "technical": "KFT", "amount": "900"},
-        {"classification": "Special Investigations", "alternate": "LPT", "technical": "LPT", "amount": "500"},
-        {"classification": "Special Investigations", "alternate": "HBsAg", "technical": "HBsAg", "amount": "200"},
-        {"classification": "Special Investigations", "alternate": "HIV I & II", "technical": "HIV I & II", "amount": "300"},
-        {"classification": "Special Investigations", "alternate": "Anti CA 125", "technical": "Anti CA 125", "amount": "800"},
-        {"classification": "Special Investigations", "alternate": "GH", "technical": "GH", "amount": "TBD"},
-        {"classification": "Special Investigations", "alternate": "Anti Sperm Antibody", "technical": "Anti Sperm Antibody", "amount": "TBD"},
-        {"classification": "Special Investigations", "alternate": "HBA1C", "technical": "HBA1C", "amount": "400"},
-        {"classification": "Special Investigations", "alternate": "Total IgE", "technical": "Total IgE", "amount": "600"},
-        {"classification": "Special Investigations", "alternate": "Beta HCG", "technical": "Beta HCG", "amount": "600"},
-        {"classification": "Special Investigations", "alternate": "FSH", "technical": "FSH", "amount": "400"},
-        {"classification": "Special Investigations", "alternate": "LH", "technical": "LH", "amount": "400"},
-        {"classification": "Special Investigations", "alternate": "AMA", "technical": "AMA", "amount": "TBD"}
-    ];
-
-    let selectedTestsList = [];
-
-    const START_MSG = `👋 Hello!
-
-I'm **LabBuddy by Krishna Prakash Laboratory** from **Krishna Prakash Laboratory** 🩺
-
-I'm here to make your laboratory experience quick and easy.
-
-How may we help you today?
-
-Please choose one of the following:
-
-💰 1. Estimated Price Calculation
-
-🏠 2. Book Home Collection Appointment
-
-❓ 3. Queries / Clarifications
-
-You can simply reply with **1**, **2**, or **3**.`;
-
-    const MAIN_MENU_MSG = `How may we help you today?
-
-💰 1. Estimated Price Calculation
-
-🏠 2. Book Home Collection Appointment
-
-❓ 3. Queries / Clarifications`;
-
-    const OPTION_3_MSG = `We're happy to help 😊
 
-If your question requires assistance from our laboratory team, you can contact us using any of the options below:
+const PASS={admin:'Krishna@94',emp:'Durga143'}, K={r:'kpl_records2',s:'kpl_spends2',f:'kpl_fields2',t:'kpl_tabs2',d:'kpl_customdata2'};
 
-📧 Email
-Kickkrishna600@gmail.com
+const $=id=>document.getElementById(id), uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])), num=v=>Number(v)||0, fmt=n=>num(n).toLocaleString('en-IN',{maximumFractionDigits:2});
 
-📞 Phone
-9087929619
-
-💬 WhatsApp
-https://wa.me/+919087929619
-
-Our team will get back to you as soon as possible.`;
-
-    window.onload = function() {
-        appendBotMessage(START_MSG);
-    };
-
-    function getCurrentTime() {
-        const now = new Date();
-        return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-
-    function appendUserMessage(text) {
-        const chat = document.getElementById('chatMessages');
-        const msg = document.createElement('div');
-        msg.className = 'message user';
-        msg.innerHTML = `<div>${text.replace(/\n/g, '<br>')}</div><span class="message-time">${getCurrentTime()}</span>`;
-        chat.appendChild(msg);
-        chat.scrollTop = chat.scrollHeight;
-    }
-
-    function appendBotMessage(text, customHtml = '') {
-        const chat = document.getElementById('chatMessages');
-        const msg = document.createElement('div');
-        msg.className = 'message bot';
-        
-        let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        formatted = formatted.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
-        formatted = formatted.replace(/\n/g, '<br>');
-
-        msg.innerHTML = `<div>${formatted}</div>${customHtml}<span class="message-time">${getCurrentTime()}</span>`;
-        chat.appendChild(msg);
-        chat.scrollTop = chat.scrollHeight;
-    }
-
-    function handleKeyPress(e) {
-        if (e.key === 'Enter') handleSend();
-    }
-
-    function triggerAction(val) {
-        document.getElementById('userInput').value = val;
-        handleSend();
-    }
-
-    function handleSend() {
-        const input = document.getElementById('userInput');
-        const val = input.value.trim();
-        if (!val) return;
-
-        appendUserMessage(val);
-        input.value = '';
-
-        setTimeout(() => {
-            processInput(val);
-        }, 250);
-    }
-
-    function processInput(val) {
-        const lower = val.toLowerCase();
-
-        if (['menu', 'main menu', 'home', 'start'].includes(lower)) {
-            appendBotMessage(MAIN_MENU_MSG);
-            return;
-        }
-
-        if (val === '1' || lower.includes('price') || lower.includes('cost') || lower.includes('estimate')) {
-            showPriceSearchUI();
-            return;
-        }
-
-        if (val === '2' || lower.includes('home collection') || lower.includes('appointment') || lower.includes('book')) {
-            showHomeCollectionUI();
-            return;
-        }
-
-        if (val === '3' || lower.includes('query') || lower.includes('help') || lower.includes('clarification')) {
-            appendBotMessage(OPTION_3_MSG);
-            return;
-        }
-
-        // Default Error response
-        appendBotMessage(`I'm sorry, I didn't quite understand that.
-
-Please choose one of the options below:
-
-💰 1. Estimated Price Calculation
-
-🏠 2. Book Home Collection Appointment
-
-❓ 3. Queries / Clarifications`);
-    }
-
-    // --- Interactive Feature 1: Price Calculator with Live Search ---
-    function showPriceSearchUI() {
-        selectedTestsList = [];
-        const cardHtml = `
-            <div class="ui-card">
-                <div class="ui-card-title"><i class="fa-solid fa-magnifying-glass"></i> Search & Add Tests</div>
-                <div class="selected-tags" id="selectedTags"></div>
-                <div class="test-search-box">
-                    <input type="text" id="testSearchInput" class="test-search-input" placeholder="Type test name (e.g. CBC, Vitamin D)..." oninput="handleTestSearch(this.value)">
-                    <div id="dropdownSuggestions" class="dropdown-suggestions"></div>
-                </div>
-                <button class="btn-submit" style="background: var(--primary-grad);" onclick="calculateSelectedTests()"><i class="fa-solid fa-calculator"></i> Calculate Estimated Price</button>
-            </div>
-        `;
-        appendBotMessage("📝 Please search and select the laboratory tests below:", cardHtml);
-    }
-
-    function handleTestSearch(query) {
-        const dropdown = document.getElementById('dropdownSuggestions');
-        if (!query.trim()) {
-            dropdown.style.display = 'none';
-            return;
-        }
-
-        const filtered = PRICE_DATABASE.filter(item => 
-            item.alternate.toLowerCase().includes(query.toLowerCase()) || 
-            item.technical.toLowerCase().includes(query.toLowerCase())
-        );
-
-        if (filtered.length === 0) {
-            dropdown.innerHTML = `<div class="dropdown-item" style="color:#a0aec0;">No exact match. Click calculate to add "${query}" as TBD.</div>`;
-            dropdown.style.display = 'block';
-            return;
-        }
-
-        dropdown.innerHTML = filtered.map(item => `
-            <div class="dropdown-item" onclick="addTestTag('${item.alternate}')">
-                <span><strong>${item.alternate}</strong> <small style="color:#718096">(${item.classification})</small></span>
-                <span style="font-weight:600; color:#008080;">${item.amount === 'TBD' ? 'TBD' : '₹' + item.amount}</span>
-            </div>
-        `).join('');
-        dropdown.style.display = 'block';
-    }
-
-    function addTestTag(testName) {
-        if (!selectedTestsList.includes(testName)) {
-            selectedTestsList.push(testName);
-            renderTags();
-        }
-        document.getElementById('testSearchInput').value = '';
-        document.getElementById('dropdownSuggestions').style.display = 'none';
-    }
-
-    function removeTag(testName) {
-        selectedTestsList = selectedTestsList.filter(t => t !== testName);
-        renderTags();
-    }
-
-    function renderTags() {
-        const container = document.getElementById('selectedTags');
-        container.innerHTML = selectedTestsList.map(t => `
-            <span class="tag">${t} <i class="fa-solid fa-circle-xmark remove-tag" onclick="removeTag('${t}')"></i></span>
-        `).join('');
-    }
-
-    function calculateSelectedTests() {
-        const searchVal = document.getElementById('testSearchInput').value.trim();
-        if (searchVal && !selectedTestsList.includes(searchVal)) {
-            selectedTestsList.push(searchVal);
-        }
-
-        if (selectedTestsList.length === 0) {
-            alert('Please select or type at least one test.');
-            return;
-        }
-
-        let splitUp = [];
-        let total = 0;
-        let hasTBD = false;
-
-        selectedTestsList.forEach(tName => {
-            const found = PRICE_DATABASE.find(item => 
-                item.alternate.toLowerCase() === tName.toLowerCase() || 
-                item.technical.toLowerCase() === tName.toLowerCase()
-            );
-
-            if (found) {
-                if (found.amount === 'TBD') {
-                    splitUp.push(`✔ ${tName}\nTo be discussed (Contact lab)`);
-                    hasTBD = true;
-                } else {
-                    const amt = parseInt(found.amount);
-                    splitUp.push(`✔ ${tName}\n₹${amt}`);
-                    total += amt;
-                }
-            } else {
-                splitUp.push(`✔ ${tName}\nTo be discussed (Contact lab)`);
-                hasTBD = true;
-            }
-        });
-
-        let totalDisplay = (hasTBD && total === 0) ? "To be discussed" : `₹${total.toLocaleString('en-IN')}${hasTBD ? ' + additional test(s) to be discussed' : ''}`;
-
-        const resultText = `--------------------------------
-
-Estimated Price
-
-${splitUp.join('\n\n')}
-
--------------------------
-
-Estimated Total
-
-${totalDisplay}
-
--------------------------
-
-Please note:
-This is an estimated cost.
-Final pricing may vary if additional tests are added.
-
---------------------------------
-
-Would you like to:
-
-🏠 Book a Home Collection Appointment (Reply 2)
-
-❓ Ask another Query (Reply 3)
-
-🏠 Return to Main Menu (Reply Menu)`;
-
-        appendBotMessage(resultText);
-    }
-
-    // --- Interactive Feature 2: Booking Form with WhatsApp Redirect ---
-    function showHomeCollectionUI() {
-        const prefilledTests = selectedTestsList.join(', ');
-        const cardHtml = `
-            <div class="ui-card">
-                <div class="ui-card-title"><i class="fa-solid fa-calendar-check"></i> Book Home Collection</div>
-                <form onsubmit="handleFormSubmit(event)">
-                    <div class="form-group">
-                        <label>Booked By Person Name *</label>
-                        <input type="text" id="bookerName" required placeholder="e.g. John Doe">
-                    </div>
-                    <div class="form-group">
-                        <label>Patient Name *</label>
-                        <input type="text" id="patientName" required placeholder="e.g. Peter Doe">
-                    </div>
-                    <div class="form-group">
-                        <label>Tests Required *</label>
-                        <input type="text" id="bookingTests" required value="${prefilledTests}" placeholder="e.g. CBC, Lipid Profile">
-                    </div>
-                    <div class="form-group">
-                        <label>Full Address *</label>
-                        <textarea id="bookingAddress" rows="2" required placeholder="Door No, Street Name, Area"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Landmark *</label>
-                        <input type="text" id="bookingLandmark" required placeholder="e.g. Near Temple">
-                    </div>
-                    <div class="form-group">
-                        <label>Phone Number *</label>
-                        <input type="tel" id="bookingPhone" required pattern="[0-9]{10}" placeholder="10 digit mobile number">
-                    </div>
-                    <button type="submit" class="btn-submit"><i class="fa-brands fa-whatsapp"></i> Confirm & Send via WhatsApp</button>
-                </form>
-            </div>
-        `;
-        appendBotMessage("🏠 Home Collection Booking\n\nPlease fill in your details below to confirm your appointment:", cardHtml);
-    }
-
-    function handleFormSubmit(e) {
-        e.preventDefault();
-
-        const booker = document.getElementById('bookerName').value.trim();
-        const patient = document.getElementById('patientName').value.trim();
-        const tests = document.getElementById('bookingTests').value.trim();
-        const address = document.getElementById('bookingAddress').value.trim();
-        const landmark = document.getElementById('bookingLandmark').value.trim();
-        const phone = document.getElementById('bookingPhone').value.trim();
-
-        const formattedSummary = `--------------------------------
-
-Home Collection Booking
-
-Name of person booking appointment:
-${booker}
-
-Name of Patient:
-${patient}
-
-Tests to be taken:
-${tests}
-
-Address:
-${address}
-
-Landmark:
-${landmark}
-
-Phone Number:
-${phone}
-
---------------------------------`;
-
-        const waText = encodeURIComponent(`Hello Krishna Prakash Laboratory, I would like to book a Home Collection Appointment:\n\n${formattedSummary}`);
-        const waUrl = `https://wa.me/+919087929619?text=${waText}`;
-
-        const botReply = `${formattedSummary}
-
-Now simply copy the above details and paste them into WhatsApp using the link below:
-
-${waUrl}
-
-We'll confirm your appointment shortly.
-
-Thank you.`;
-
-        appendBotMessage(botReply);
-
-        // Auto open WhatsApp
-        window.open(waUrl, '_blank');
-    }
-</script>
-</body>
-</html>
+let seed={};try{seed=JSON.parse($('seed-data').textContent)}catch(e){} const load=(k,def)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){return def}};
+
+let records=load(K.r,seed.records||[]),spends=load(K.s,seed.spends||[]),customFields=load(K.f,seed.customFields||[]),customTabs=load(K.t,seed.customTabs||[]),customData=load(K.d,seed.customData||{});let role='',pendingRole='',editingUid='',balanceOnly=false,currentStore='',editingStore='';
+
+function persist(){localStorage.setItem(K.r,JSON.stringify(records));localStorage.setItem(K.s,JSON.stringify(spends));localStorage.setItem(K.f,JSON.stringify(customFields));localStorage.setItem(K.t,JSON.stringify(customTabs));localStorage.setItem(K.d,JSON.stringify(customData))}function toast(m,b=false){const t=$('toast');t.textContent=m;t.className='show'+(b?' bad':'');setTimeout(()=>t.className='',2400)}function closeModal(id){$(id).classList.add('hidden')}
+
+function chooseRole(r){pendingRole=r;$('pwdTitle').textContent=(r==='admin'?'Admin':'EMP')+' Login';$('pwdInput').value='';$('pwdErr').textContent='';$('pwdModal').classList.remove('hidden')}function doLogin(){if($('pwdInput').value!==PASS[pendingRole]){$('pwdErr').textContent='Incorrect password';return}role=pendingRole;sessionStorage.setItem('kpl_role',role);showApp()}function showApp(){closeModal('pwdModal');$('landing').classList.add('hidden');$('app').classList.remove('hidden');$('roleBadge').textContent=role.toUpperCase();document.querySelectorAll('.admin-only').forEach(x=>x.classList.toggle('hidden',role!=='admin'));buildForm();renderAll()}function logout(){sessionStorage.removeItem('kpl_role');sessionStorage.removeItem('kpl_by');location.reload()}
+
+const baseFields=[{key:'date',label:'Date',type:'date',req:1},{key:'id',label:'ID',type:'text',req:1},{key:'name',label:'Name',type:'text',req:1},{key:'phone',label:'Phone',type:'text'},{key:'desc',label:'Description',type:'text'},{key:'ref',label:'Referred By',type:'text'},{key:'total',label:'Total Value',type:'number',req:1},{key:'adv',label:'Received Value',type:'number'},{key:'by',label:'Entered By',type:'text',req:1}];
+
+/* Admin sees everything (all fields & tabs, incl. EMP-only). EMP sees 'both' + 'emp'. */
+
+function visible(f){return role==='admin'||!f.role||f.role==='both'||f.role===role}function allFields(){return baseFields.concat(customFields.filter(visible))}function buildForm(){const fs=allFields();$('entryForm').innerHTML=fs.map(f=>`<div class="fg ${f.key==='desc'?'full':''}"><label>${esc(f.label)}${f.req?' *':''}</label><input id="fld_${esc(f.key)}" type="${f.type==='select'?'text':f.type}" ${f.type==='number'?'step="any"':''}></div>`).join('')+`<div class="fg"><label>Balance Value (auto)</label><input id="fld_bal" readonly></div>`;['fld_total','fld_adv'].forEach(id=>$(id)&&$(id).addEventListener('input',calcBal));setupRefAC();resetForm()}
+
+function calcBal(){if($('fld_bal'))$('fld_bal').value=fmt(num($('fld_total')?.value)-num($('fld_adv')?.value))}function isoToday(){return new Date().toISOString().slice(0,10)}function resetForm(){editingUid='';$('formTitle').textContent='?? New Entry';allFields().forEach(f=>{const e=$('fld_'+f.key);if(e)e.value=f.key==='date'?isoToday():''});calcBal();$('formErr').textContent='';applyByLock()}function saveRecord(){const r={};allFields().forEach(f=>{const e=$('fld_'+f.key);r[f.key]=f.type==='number'?num(e.value):e.value.trim()});const miss=allFields().filter(f=>f.req&&!String(r[f.key]??'').trim()).map(f=>f.label);if(miss.length){$('formErr').textContent='Required: '+miss.join(', ');return}if(num(r.adv)>num(r.total)){$('formErr').textContent='Received cannot exceed Total';return}r.bal=+(num(r.total)-num(r.adv)).toFixed(2);if(r.ref){const hit=refOptions().find(o=>normTxt(o.label)===normTxt(r.ref));if(hit)r.ref=hit.label}if(!editingUid&&!sessionStorage.getItem('kpl_by'))sessionStorage.setItem('kpl_by',r.by);if(editingUid){const i=records.findIndex(x=>x.uid===editingUid);records[i]={...records[i],...r,updatedAt:Date.now()}}else records.push({uid:uid(),...r,createdAt:Date.now()});persist();resetForm();renderAll();toast('Entry saved')}
+
+function editRecord(u){const r=records.find(x=>x.uid===u);if(!r)return;editingUid=u;$('formTitle').textContent='?? Edit Entry';allFields().forEach(f=>{const e=$('fld_'+f.key);if(e)e.value=r[f.key]??''});calcBal();applyByLock();$('formTitle').scrollIntoView({behavior:'smooth'})}function deleteRecord(u,e){e.stopPropagation();if(confirm('Delete this entry?')){records=records.filter(x=>x.uid!==u);persist();renderAll()}}
+
+function toDate(v){if(!v)return '';if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;const m=/^(\d{2})-(\d{2})-(\d{4})$/.exec(v);return m?`${m[3]}-${m[2]}-${m[1]}`:v}function refreshFilterOptions(){const opt=(id,vals)=>{const e=$(id),old=e.value;e.innerHTML='<option value="">All</option>'+[...new Set(vals.filter(Boolean))].sort().map(v=>`<option>${esc(v)}</option>`).join('');e.value=old};opt('fltRef',records.map(r=>r.ref));opt('fltBy',records.map(r=>r.by));opt('dashRef',records.map(r=>r.ref));opt('dashCls',spends.map(s=>s.cls))}function toggleFilters(){$('filterPanel').classList.toggle('hidden')}function toggleBalance(){balanceOnly=!balanceOnly;$('balanceBtn').classList.toggle('on',balanceOnly);renderTable()}function clearTableFilters(){['fltFrom','fltTo','fltRef','fltBy','fltMin','fltMax'].forEach(id=>$(id).value='');balanceOnly=false;$('balanceBtn').classList.remove('on');renderTable()}
+
+function filteredRecords(){const q=$('search').value.toLowerCase(),fr=$('fltFrom').value,to=$('fltTo').value,rf=$('fltRef').value,by=$('fltBy').value,mi=$('fltMin').value,ma=$('fltMax').value;return records.filter(r=>(!q||Object.values(r).join(' ').toLowerCase().includes(q))&&(!balanceOnly||num(r.bal)>0)&&(!fr||toDate(r.date)>=fr)&&(!to||toDate(r.date)<=to)&&(!rf||r.ref===rf)&&(!by||r.by===by)&&(mi===''||num(r.total)>=num(mi))&&(ma===''||num(r.total)<=num(ma))).sort((a,b)=>toDate(b.date).localeCompare(toDate(a.date)))}function renderTable(){const fs=allFields();$('recHead').innerHTML='<th>#</th>'+fs.map(f=>`<th class="${f.type==='number'?'num':''}">${esc(f.label)}</th>`).join('')+'<th class="num">Balance</th>'+(role==='admin'?'<th>Action</th>':'');const l=filteredRecords();$('recCount').textContent=l.length+'/'+records.length;$('recBody').innerHTML=l.length?l.map((r,i)=>`<tr class="click" onclick="editRecord('${r.uid}')"><td>${i+1}</td>${fs.map(f=>`<td class="${f.type==='number'?'num':''}">${f.type==='number'?fmt(r[f.key]):esc(r[f.key]||'–')}</td>`).join('')}<td class="num ${num(r.bal)>0?'neg':''}">${fmt(r.bal)}</td>${role==='admin'?`<td><button class="btn sm danger" onclick="deleteRecord('${r.uid}',event)">Delete</button></td>`:''}</tr>`).join(''):'<tr><td colspan="30" class="empty">No matching data</td></tr>'}
+
+ 
+
+/* ================= DASHBOARD (Income = Received) ================= */
+
+function isoWeek(ds){const d=new Date(ds+'T00:00:00Z');if(isNaN(d))return '';d.setUTCDate(d.getUTCDate()+3-((d.getUTCDay()+6)%7));const y=d.getUTCFullYear(),w=Math.ceil(((d-Date.UTC(y,0,1))/864e5+1)/7);return y+'-W'+String(w).padStart(2,'0')}
+
+function selectedPeriod(date){const mode=$('periodMode').value,p=$('periodDate').value;if(mode==='all'||!p)return true;const d=toDate(date);if(mode==='daily')return d===p;if(mode==='weekly')return isoWeek(d)===isoWeek(p);return d.slice(0,7)===p.slice(0,7)}
+
+function resetDash(){$('periodMode').value='all';$('periodDate').value='';$('dashRef').value='';$('dashCls').value='';$('groupBy').value='month';$('refMetric').value='adv';renderAll()}
+
+function periodKey(date){const d=toDate(date),g=$('groupBy').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return '(No date)';return g==='day'?d:g==='week'?isoWeek(d):d.slice(0,7)}
+
+function sumK(a,k){return a.reduce((t,x)=>t+num(x[k]),0)}
+
+function dashData(){const ref=$('dashRef').value,cls=$('dashCls').value;return{rr:records.filter(r=>selectedPeriod(r.date)&&(!ref||r.ref===ref)),ss:spends.filter(s=>selectedPeriod(s.date)&&(!cls||s.cls===cls))}}
+
+function shortN(v){const a=Math.abs(v),s=v<0?'-':'';if(a>=1e7)return s+(a/1e7).toFixed(1)+'Cr';if(a>=1e5)return s+(a/1e5).toFixed(1)+'L';if(a>=1e3)return s+(a/1e3).toFixed(1)+'K';return s+Math.round(a)}
+
+function vChart(id,labels,series){const el=$(id);if(!labels.length){el.innerHTML='<div class="empty">No data for the selected filters</div>';return}
+
+const legend='<div class="legend">'+series.flatMap(s=>s.legend||[{n:s.name,c:s.color}]).map(l=>`<span><i style="background:${l.c}"></i>${esc(l.n)}</span>`).join('')+'</div>';
+
+const vals=series.flatMap(s=>s.values),mx=Math.max(0,...vals),mn=Math.min(0,...vals),rng=(mx-mn)||1,H=280,pt=14,pb=62,pl=62,pr=12,gw=Math.max(46,series.length*20+18),avail=(el.clientWidth||700)-4,W=Math.max(avail,pl+pr+labels.length*gw),gW=(W-pl-pr)/labels.length,plotH=H-pt-pb,y=v=>pt+(mx-v)/rng*plotH,y0=y(0),bw=Math.min(34,(gW-14)/series.length);let g='';
+
+for(let i=0;i<=4;i++){const v=mn+rng*i/4,yy=y(v);g+=`<line x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}" stroke="#e5f4d8"/><text x="${pl-6}" y="${yy+4}" text-anchor="end" font-size="10" fill="#5f7a63">${shortN(v)}</text>`}
+
+labels.forEach((l,i)=>{const cx=pl+i*gW+gW/2,start=cx-bw*series.length/2;series.forEach((s,j)=>{const v=s.values[i]||0,top=Math.min(y(v),y0),h=Math.max(Math.abs(y(v)-y0),v?1:0),c=typeof s.color==='function'?s.color(v):s.color;g+=`<rect x="${start+j*bw+1}" y="${top}" width="${bw-2}" height="${h}" fill="${c}" rx="3"><title>${esc(l)} | ${esc(typeof s.name==='function'?s.name(v):s.name)}: ${fmt(v)}</title></rect>`});g+=`<text x="${cx}" y="${H-pb+14}" font-size="10.5" text-anchor="end" fill="#1f3b24" transform="rotate(-35 ${cx} ${H-pb+14})">${esc(l)}</text>`});
+
+g+=`<line x1="${pl}" x2="${W-pr}" y1="${y0}" y2="${y0}" stroke="#2b7a37" stroke-width="1.2"/>`;
+
+el.innerHTML=legend+`<div class="chart-scroll"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Segoe UI,Arial">${g}</svg></div>`}
+
+function hChart(id,items,color,isCount){const el=$(id);if(!items.length){el.innerHTML='<div class="empty">No data for the selected filters</div>';return}const mx=Math.max(...items.map(i=>i.value),1);el.innerHTML='<div class="hbars">'+items.map((it,i)=>`<div class="hrow" title="${esc(it.label)}: ${fmt(it.value)}"><span class="hl">${i+1}. ${esc(it.label)}</span><div class="htrack"><div class="hbar" style="width:${Math.max(it.value/mx*100,0.6)}%;background:${typeof color==='function'?color(i):color}"></div></div><span class="hv">${isCount?fmt(it.value):'? '+fmt(it.value)}${it.sub?`<small>${esc(it.sub)}</small>`:''}</span></div>`).join('')+'</div>'}
+
+function renderDashboard(){if(role!=='admin')return;const {rr,ss}=dashData(),T=sumK(rr,'total'),A=sumK(rr,'adv'),B=sumK(rr,'bal'),S=sumK(ss,'val'),N=A-S,gName={month:'Month',week:'Week',day:'Day'}[$('groupBy').value];
+
+$('kpis').innerHTML=[['No. of patients',rr.length,''],['Total Value',T,''],['Income (Received)',A,''],['Balance',B,''],['Spends',S,'loss'],[N<0?'Net Loss':'Net Profit',Math.abs(N),N<0?'loss':'']].map(x=>`<div class="kpi ${x[2]}"><small>${x[0]}</small><div>${fmt(x[1])}</div></div>`).join('');
+
+const G={},gp=k=>G[k]=G[k]||{n:0,t:0,a:0,b:0,s:0};rr.forEach(r=>{const x=gp(periodKey(r.date));x.n++;x.t+=num(r.total);x.a+=num(r.adv);x.b+=num(r.bal)});ss.forEach(s=>{gp(periodKey(s.date)).s+=num(s.val)});const keys=Object.keys(G).sort();
+
+$('plTitle').textContent=`?? Profit / Loss by ${gName} (Income = Received)`;
+
+vChart('plChart',keys,[{name:'Received (Income)',color:'#3fa34d',values:keys.map(k=>G[k].a)},{name:'Spends',color:'#f0a04b',values:keys.map(k=>G[k].s)},{name:v=>v<0?'Loss':'Profit',color:v=>v<0?'#d64545':'#1f6b2c',values:keys.map(k=>G[k].a-G[k].s),legend:[{n:'Profit',c:'#1f6b2c'},{n:'Loss',c:'#d64545'}]}]);
+
+$('periodBody').innerHTML=keys.slice().reverse().map(k=>{const v=G[k],pl=v.a-v.s;return `<tr><td>${esc(k)}</td><td class="num">${v.n}</td><td class="num">${fmt(v.t)}</td><td class="num">${fmt(v.a)}</td><td class="num ${v.b>0?'neg':''}">${fmt(v.b)}</td><td class="num">${fmt(v.s)}</td><td class="num ${pl<0?'neg':'pos'}">${fmt(pl)}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">No data</td></tr>';
+
+$('periodFoot').innerHTML=keys.length?`<tr><td>Total</td><td class="num">${rr.length}</td><td class="num">${fmt(T)}</td><td class="num">${fmt(A)}</td><td class="num">${fmt(B)}</td><td class="num">${fmt(S)}</td><td class="num ${N<0?'neg':'pos'}">${fmt(N)}</td></tr>`:'';
+
+const cm={};ss.forEach(s=>{const c=s.cls||'(Unclassified)';cm[c]=cm[c]||{v:0,n:0};cm[c].v+=num(s.val);cm[c].n++});const clsItems=Object.entries(cm).map(([l,o])=>({label:l,value:o.v,sub:`${o.n} item${o.n>1?'s':''} · ${S?(o.v/S*100).toFixed(1):0}%`})).sort((a,b)=>b.value-a.value);
+
+const pal=['#d64545','#e8683f','#f0a04b','#e0b84a','#c77dba','#8f7fd6','#5b9bd5','#4fb3a9'];hChart('spClsChart',clsItems,i=>pal[i%pal.length]);
+
+const SG={};ss.forEach(s=>{const k=periodKey(s.date);SG[k]=(SG[k]||0)+num(s.val)});const sk=Object.keys(SG).sort();$('spTimeTitle').textContent=`?? Spends Trend by ${gName}`;vChart('spTimeChart',sk,[{name:'Spends',color:'#d64545',values:sk.map(k=>SG[k])}]);
+
+const m=$('refMetric').value,rm={};rr.forEach(r=>{const k=(r.ref||'').trim()||'(Not specified)';rm[k]=rm[k]||{v:0,n:0};rm[k].v+=m==='cnt'?1:num(r[m]);rm[k].n++});const base=m==='cnt'?rr.length:(m==='adv'?A:m==='total'?T:B);const refItems=Object.entries(rm).map(([l,o])=>({label:l,value:o.v,sub:`${m==='cnt'?'':o.n+' entr'+(o.n>1?'ies':'y')+' · '}${base?(o.v/base*100).toFixed(1):0}%`})).sort((a,b)=>b.value-a.value);hChart('refChart',refItems,'linear-gradient(90deg,#3fa34d,#a8d672)',m==='cnt');
+
+const coll=T?(A/T*100).toFixed(1):'0.0';$('summary').innerHTML=`<p>Selected No. of patients: <b>${rr.length}</b></p><p>Spend records: <b>${ss.length}</b></p><p>Collection (Received ÷ Total): <b>${coll}%</b></p><p>Outstanding balance: <b class="${B>0?'neg':''}">${fmt(B)}</b></p><p>Top referrer: <b>${refItems[0]?esc(refItems[0].label):'–'}</b></p><p>Top spend classification: <b>${clsItems[0]?esc(clsItems[0].label):'–'}</b></p><p>${N<0?'Net Loss':'Net Profit'}: <b class="${N<0?'neg':'pos'}">${fmt(Math.abs(N))}</b></p><p class="note">Income = Received received (not Total Value). Profit / Loss = Received - Spends. "Referred by" filter applies to No. of patients; "Spend classification" filter applies to spends; Period filter applies to both.</p>`}
+
+function renderAdminTabs(){if(role!=='admin')return;$('tabCount').textContent=customTabs.length;if(!customTabs.length){$('adminTabsData').innerHTML='<p class="note">No custom tabs yet. Tabs added via "Manage Fields/Tabs" will appear here automatically.</p>';return}
+
+$('adminTabsData').innerHTML=customTabs.map(t=>{const all=customData[t.id]||[],dc=t.columns.find(c=>c.type==='date'),rows=(dc?all.filter(x=>selectedPeriod(x[dc.key])):all.slice());if(dc)rows.sort((a,b)=>toDate(b[dc.key]).localeCompare(toDate(a[dc.key])));const st=[['Items',rows.length]];t.columns.forEach(c=>{if(c.type==='number')st.push(['Total '+c.label,sumK(rows,c.key)]);else if(c.type==='select'){const y=rows.filter(x=>x[c.key]==='Yes').length;st.push([c.label+': Yes',y],[c.label+': No',rows.length-y])}});
+
+return `<div class="panel tabdata"><div class="toolbar"><h3>${esc(t.name)} <span class="badge">${rows.length}/${all.length}</span> <span class="note">Visible to: ${esc(t.role)}</span></h3><button class="btn sm light" onclick="openStore('${t.id}')">Open / Edit</button></div><div class="kpis mini">${st.map(s=>`<div class="kpi"><small>${esc(s[0])}</small><div>${fmt(s[1])}</div></div>`).join('')}</div><div class="tbl-wrap" style="max-height:240px"><table><thead><tr><th>#</th>${t.columns.map(c=>`<th class="${c.type==='number'?'num':''}">${esc(c.label)}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.map((x,i)=>`<tr><td>${i+1}</td>${t.columns.map(c=>`<td class="${c.type==='number'?'num':''}">${c.type==='number'?fmt(x[c.key]):esc(x[c.key]||'–')}</td>`).join('')}</tr>`).join(''):'<tr><td colspan="30" class="empty">No data</td></tr>'}</tbody></table></div></div>`}).join('')}
+
+ 
+
+function addField(){const name=$('newFieldName').value.trim();if(!name)return;customFields.push({key:'cf_'+uid(),label:name,type:$('newFieldType').value,role:$('newFieldRole').value});persist();buildForm();renderBuilder();renderAll();$('newFieldName').value=''}function removeField(k){if(confirm('Remove this field? Existing values remain stored but hidden.')){customFields=customFields.filter(f=>f.key!==k);persist();buildForm();renderBuilder();renderAll()}}function editField(k){const f=customFields.find(x=>x.key===k),n=prompt('Field name',f.label);if(n){f.label=n.trim();persist();buildForm();renderBuilder();renderAll()}}function addTab(){const name=$('newTabName').value.trim(),cols=$('newTabCols').value.split(',').map(x=>x.trim()).filter(Boolean);if(!name||!cols.length)return;const id='tab_'+uid();customTabs.push({id,name,role:$('newTabRole').value,columns:cols.map(c=>({key:'c_'+uid(),label:c,type:/date/i.test(c)?'date':/amount|value/i.test(c)?'number':/paid/i.test(c)?'select':'text'}))});customData[id]=[];persist();renderBuilder();renderAll();$('newTabName').value='';$('newTabCols').value=''}function removeTab(id){if(confirm('Remove tab and its stored items?')){customTabs=customTabs.filter(t=>t.id!==id);delete customData[id];persist();renderBuilder();renderAll()}}function openBuilder(){renderBuilder();$('builderModal').classList.remove('hidden')}function renderBuilder(){$('fieldList').innerHTML=customFields.map(f=>`<div class="toolbar"><span>${esc(f.label)} (${f.type}, ${f.role})</span><span><button class="btn sm light" onclick="editField('${f.key}')">Edit</button> <button class="btn sm danger" onclick="removeField('${f.key}')">Remove</button></span></div>`).join('')||'<p class="note">No custom fields.</p>';$('tabList').innerHTML=customTabs.map(t=>`<div class="toolbar"><span>${esc(t.name)}: ${t.columns.map(c=>esc(c.label)).join(', ')} (${t.role})</span><button class="btn sm danger" onclick="removeTab('${t.id}')">Remove</button></div>`).join('')||'<p class="note">No custom tabs.</p>'}
+
+function renderCustomTabs(){$('customTabs').innerHTML=customTabs.filter(visible).map(t=>`<button class="btn tab light" onclick="openStore('${t.id}')">${esc(t.name)}</button>`).join('')}function storeDef(){if(currentStore==='spends')return{id:'spends',name:'Spends',columns:[{key:'date',label:'Date',type:'date'},{key:'cls',label:'Classification',type:'text'},{key:'desc',label:'Description',type:'text'},{key:'val',label:'Value',type:'number'}]};return customTabs.find(t=>t.id===currentStore)}function storeArray(){return currentStore==='spends'?spends:(customData[currentStore]||(customData[currentStore]=[]))}function openStore(id){currentStore=id;editingStore='';const d=storeDef();$('storeTitle').textContent=d.name;$('storeModal').classList.remove('hidden');renderStore()}function renderStore(){const d=storeDef(),a=storeArray();$('storeForm').innerHTML=d.columns.map(c=>`<div class="fg"><label>${esc(c.label)}</label>${c.type==='select'?`<select id="st_${c.key}"><option value="No">No</option><option value="Yes">Yes</option></select>`:`<input id="st_${c.key}" type="${c.type}" ${c.type==='number'?'step="any"':''}>`}</div>`).join('');$('storeHead').innerHTML=d.columns.map(c=>`<th>${esc(c.label)}</th>`).join('')+'<th>Action</th>';$('storeBody').innerHTML=a.length?a.map(x=>`<tr>${d.columns.map(c=>`<td>${c.type==='number'?fmt(x[c.key]):esc(x[c.key]||'–')}</td>`).join('')}<td><button class="btn sm light" onclick="editStoreItem('${x.uid}')">Edit</button> <button class="btn sm danger" onclick="deleteStoreItem('${x.uid}')">Delete</button></td></tr>`).join(''):'<tr><td colspan="20" class="empty">No data</td></tr>'}function saveStoreItem(){const d=storeDef(),a=storeArray(),x={uid:editingStore||uid()};d.columns.forEach(c=>x[c.key]=c.type==='number'?num($('st_'+c.key).value):$('st_'+c.key).value);if(editingStore){const i=a.findIndex(z=>z.uid===editingStore);a[i]=x}else a.push(x);persist();editingStore='';renderStore();renderAll();toast('Saved')}function editStoreItem(u){const d=storeDef(),x=storeArray().find(z=>z.uid===u);editingStore=u;d.columns.forEach(c=>$('st_'+c.key).value=x[c.key]??'')}function deleteStoreItem(u){const a=storeArray(),i=a.findIndex(x=>x.uid===u);if(i>=0&&confirm('Delete item?')){a.splice(i,1);persist();renderStore();renderAll()}}function resetStoreForm(){editingStore='';renderStore()}
+
+function xmlEsc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}function sheet(name,heads,rows){const cell=v=>`<Cell><Data ss:Type="${typeof v==='number'?'Number':'String'}">${xmlEsc(v)}</Data></Cell>`;return `<Worksheet ss:Name="${xmlEsc(name.slice(0,31))}"><Table><Row>${heads.map(h=>`<Cell><Data ss:Type="String">${xmlEsc(h)}</Data></Cell>`).join('')}</Row>${rows.map(r=>`<Row>${r.map(cell).join('')}</Row>`).join('')}</Table></Worksheet>`}function exportExcel(){const fs=baseFields.concat(customFields),sheets=[sheet('No. of patients',fs.map(f=>f.label).concat('Balance'),records.map(r=>fs.map(f=>r[f.key]??'').concat(num(r.bal)))),sheet('Spends',['Date','Classification','Description','Value'],spends.map(s=>[s.date,s.cls,s.desc,num(s.val)]))];customTabs.forEach(t=>sheets.push(sheet(t.name,t.columns.map(c=>c.label),(customData[t.id]||[]).map(x=>t.columns.map(c=>x[c.key]??'')))));const xml=`<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheets.join('')}</Workbook>`;download(new Blob([xml],{type:'application/vnd.ms-excel'}),'Krishna_Lab_All_Data.xls')}
+
+function importExcel(inp){const f=inp.files[0];if(!f)return;if(f.name.toLowerCase().endsWith('.xlsx')){toast('Please save the file as Excel 2003 XML (.xls) before importing.',true);inp.value='';return}const rd=new FileReader();rd.onload=()=>{try{const doc=new DOMParser().parseFromString(rd.result,'text/xml'),ws=[...doc.getElementsByTagName('Worksheet')];let added=0;ws.forEach(w=>{const name=w.getAttribute('ss:Name')||w.getAttribute('Name'),rows=[...w.getElementsByTagName('Row')].map(r=>[...r.getElementsByTagName('Data')].map(d=>d.textContent));if(rows.length<2)return;const heads=rows[0],data=rows.slice(1);if(name==='No. of patients'){const fs=baseFields.concat(customFields);data.forEach(v=>{const x={uid:uid(),createdAt:Date.now()};fs.forEach(f=>x[f.key]=f.type==='number'?num(v[heads.indexOf(f.label)]):v[heads.indexOf(f.label)]||'');x.bal=num(x.total)-num(x.adv);records.push(x);added++})}else if(name==='Spends'){data.forEach(v=>{spends.push({uid:uid(),date:v[0]||'',cls:v[1]||'',desc:v[2]||'',val:num(v[3])});added++})}else{const t=customTabs.find(x=>x.name===name);if(t)data.forEach(v=>{const x={uid:uid()};t.columns.forEach(c=>x[c.key]=c.type==='number'?num(v[heads.indexOf(c.label)]):v[heads.indexOf(c.label)]||'');(customData[t.id]||(customData[t.id]=[])).push(x);added++})}});persist();renderAll();toast(added+' rows imported')}catch(e){toast('Import failed. Use the exported .xls format.',true)}inp.value=''};rd.readAsText(f)}
+
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}function downloadSnapshot(){const clone=document.documentElement.cloneNode(true),seedEl=clone.querySelector('#seed-data');seedEl.textContent=JSON.stringify({records,spends,customFields,customTabs,customData}).replace(/</g,'\\u003c');const ac=clone.querySelector('#refAC');if(ac)ac.remove();const out='<!DOCTYPE html>\n'+clone.outerHTML;download(new Blob([out],{type:'text/html'}),'Krishna_Lab_Data_Snapshot.html');toast('Updated standalone HTML downloaded')}
+
+/* ===== Entered By lock (per login session) ===== */
+
+function applyByLock(){const e=$('fld_by');if(!e)return;const v=sessionStorage.getItem('kpl_by');if(v){e.readOnly=true;e.title='Locked for this login. Logout to change.';if(!editingUid)e.value=v}else{e.readOnly=false;e.title=''}}
+
+/* ===== Referred By fuzzy suggestions ===== */
+
+const normTxt=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+
+function fuzzyScore(q,t){q=normTxt(q);t=normTxt(t);if(!q)return 1;if(t===q)return 100;if(t.startsWith(q))return 90;const ws=t.split(' ');if(ws.some(w=>w.startsWith(q)))return 80;if(t.includes(q))return 70;let i=0;for(const ch of t)if(ch===q[i])i++;const sub=i===q.length&&q.length>1?50:0;let best=0;ws.concat(t).forEach(w=>[w,w.slice(0,q.length)].forEach(x=>{const sim=1-lev(q,x)/Math.max(q.length,x.length);if(sim>best)best=sim}));return Math.max(sub,best>=0.6?best*60:0)}
+
+function refOptions(){const m={};records.forEach(r=>{const v=String(r.ref||'').trim();if(!v)return;const k=normTxt(v);m[k]=m[k]||{c:{},n:0};m[k].n++;m[k].c[v]=(m[k].c[v]||0)+1});return Object.values(m).map(o=>({label:Object.entries(o.c).sort((a,b)=>b[1]-a[1])[0][0],n:o.n}))}
+
+let acIdx=-1;
+
+function setupRefAC(){const inp=$('fld_ref');if(!inp)return;inp.setAttribute('autocomplete','off');inp.placeholder='Type to search previous names';const box=document.createElement('div');box.className='ac-list hidden';box.id='refAC';inp.parentNode.appendChild(box);inp.addEventListener('input',showRefAC);inp.addEventListener('focus',showRefAC);inp.addEventListener('blur',()=>setTimeout(()=>box.classList.add('hidden'),150));inp.addEventListener('keydown',e=>{const items=[...box.querySelectorAll('.ac-item')];if(box.classList.contains('hidden')||!items.length)return;if(e.key==='ArrowDown'){acIdx=(acIdx+1)%items.length;e.preventDefault()}else if(e.key==='ArrowUp'){acIdx=(acIdx-1+items.length)%items.length;e.preventDefault()}else if(e.key==='Enter'&&acIdx>=0){e.preventDefault();pickRef(items[acIdx].dataset.v);return}else if(e.key==='Escape'){box.classList.add('hidden');return}else return;items.forEach((x,i)=>x.classList.toggle('on',i===acIdx));items[acIdx].scrollIntoView({block:'nearest'})})}
+
+function pickRef(v){$('fld_ref').value=v;$('refAC').classList.add('hidden')}
+
+function showRefAC(){const inp=$('fld_ref'),box=$('refAC');if(!inp||!box)return;const q=inp.value.trim();acIdx=-1;const list=refOptions().map(o=>({...o,s:fuzzyScore(q,o.label)})).filter(o=>o.s>0).sort((a,b)=>b.s-a.s||b.n-a.n).slice(0,8),exact=list.some(o=>normTxt(o.label)===normTxt(q));let h=list.map(o=>`<div class="ac-item" data-v="${esc(o.label)}"><span>${esc(o.label)}</span><small>${o.n} entr${o.n>1?'ies':'y'}</small></div>`).join('');if(q&&!exact)h+=`<div class="ac-item ac-new" data-v="${esc(q)}"><span>? Add new: "${esc(q)}"</span></div>`;if(!h){box.classList.add('hidden');return}box.innerHTML=h;box.classList.remove('hidden');box.querySelectorAll('.ac-item').forEach(el=>el.addEventListener('mousedown',e=>{e.preventDefault();pickRef(el.dataset.v)}))}
+
+function renderAll(){refreshFilterOptions();renderTable();renderDashboard();renderCustomTabs();renderAdminTabs()}$('pwdInput').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});let rsz;window.addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(renderDashboard,200)});const sess=sessionStorage.getItem('kpl_role');if(sess==='admin'||sess==='emp'){role=sess;showApp()}
+
+</script></body></html>
