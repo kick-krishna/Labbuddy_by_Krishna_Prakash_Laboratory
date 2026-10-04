@@ -102,7 +102,7 @@
       <button class="btn admin-only light" onclick="openStore('spends')">Spends</button>
       <button class="btn admin-only light" onclick="openBuilder()">Manage Fields / Tabs</button>
       <button class="btn admin-only light" onclick="downloadSnapshot()">Download Updated HTML</button>
-      <button class="btn danger" onclick="logout()">Logout</button>
+      <button class="btn light" id="refreshSheetsBtn" onclick="refreshGoogleSheets()">↻ Refresh from Google Sheets</button><button class="btn danger" onclick="logout()">Logout</button>
     </div>
   </header>
 
@@ -273,7 +273,7 @@ function persist(){
     googleSaveTimer=setTimeout(()=>googleSaveState(),500);
   }
 }
-function loadGoogleState(){
+function loadGoogleState(forceFromSheets=false){
   return new Promise(resolve=>{
     if(SNAPSHOT_MODE||!GOOGLE_APPS_SCRIPT_URL||GOOGLE_APPS_SCRIPT_URL.includes('PASTE_YOUR_')){resolve(false);return}
     const cb='kplGoogleCb_'+uid();
@@ -298,11 +298,23 @@ function loadGoogleState(){
       }finally{googleRemoteApplying=false}
     };
     script.onerror=()=>finish(false);
-    script.src=GOOGLE_APPS_SCRIPT_URL+'?action=getState&callback='+encodeURIComponent(cb)+'&t='+Date.now();
+    const action=forceFromSheets?'refreshFromSheets':'getState';
+    script.src=GOOGLE_APPS_SCRIPT_URL+'?action='+action+'&callback='+encodeURIComponent(cb)+'&t='+Date.now();
     document.head.appendChild(script);
     setTimeout(()=>finish(false),15000);
   });
 }
+async function refreshGoogleSheets(){
+  const b=$('refreshSheetsBtn');
+  if(b){b.disabled=true;b.textContent='↻ Refreshing...';}
+  try{
+    const ok=await loadGoogleState(true);
+    if(ok){buildForm();renderAll();toast('Latest data loaded from Google Sheets');}
+    else toast('Google Sheets refresh failed',true);
+  }catch(e){console.error(e);toast('Google Sheets refresh failed',true)}
+  finally{if(b){b.disabled=false;b.textContent='↻ Refresh from Google Sheets';}}
+}
+
 function googleSaveState(){
   if(SNAPSHOT_MODE||!GOOGLE_APPS_SCRIPT_URL||GOOGLE_APPS_SCRIPT_URL.includes('PASTE_YOUR_'))return;
   const frameName='kplSyncFrame_'+uid();
