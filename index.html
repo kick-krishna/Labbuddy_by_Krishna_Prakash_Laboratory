@@ -102,7 +102,8 @@
       <button class="btn admin-only light" onclick="openStore('spends')">Spends</button>
       <button class="btn admin-only light" onclick="openBuilder()">Manage Fields / Tabs</button>
       <button class="btn admin-only light" onclick="downloadSnapshot()">Download Updated HTML</button>
-      <button class="btn light" id="refreshSheetsBtn" onclick="refreshGoogleSheets()">↻ Refresh from Google Sheets</button><button class="btn danger" onclick="logout()">Logout</button>
+      <button class="btn light" id="refreshSheetsBtn" onclick="refreshGoogleSheets()">↻ Refresh from Google Sheets</button>
+      <button class="btn danger" onclick="logout()">Logout</button>
     </div>
   </header>
 
@@ -225,7 +226,7 @@ const PASS={admin:'Krishna@94',emp:'Durga143'};
 const K={r:'kpl_records3',s:'kpl_spends3',f:'kpl_fields3',t:'kpl_tabs3',d:'kpl_customdata3'};
 // Google Sheets backend. Deploy the companion Apps Script as a Web App and paste
 // its /exec URL below. The spreadsheet ID is already fixed in the Apps Script.
-const GOOGLE_APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwJDuNW3JAk1HcRk1u4BT4fEWtHT9Tk325nLgQbFghpPS7L4G9pEg_3Ox1pyQAkGaCzTA/exec';
+const GOOGLE_APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbx4RXWYwkO1WF_X94-WLROPm4ep8O6v-eEf84P2pJB7vMjh9ZBJCz-_wMgTjMRUKPdpfQ/exec';
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -314,7 +315,6 @@ async function refreshGoogleSheets(){
   }catch(e){console.error(e);toast('Google Sheets refresh failed',true)}
   finally{if(b){b.disabled=false;b.textContent='↻ Refresh from Google Sheets';}}
 }
-
 function googleSaveState(){
   if(SNAPSHOT_MODE||!GOOGLE_APPS_SCRIPT_URL||GOOGLE_APPS_SCRIPT_URL.includes('PASTE_YOUR_'))return;
   const frameName='kplSyncFrame_'+uid();
