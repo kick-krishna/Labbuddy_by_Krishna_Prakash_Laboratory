@@ -60,8 +60,8 @@
     <h1>Welcome to Krishna Prakash Lab</h1>
     <p>Enhanced Data Updater</p>
     <div class="login-grid">
-      <div class="login-tile" data-login-role="admin"><b>Admin Login</b><br><small>Full control and configuration</small></div>
-      <div class="login-tile" data-login-role="emp"><b>EMP Login</b><br><small>Enter and edit data</small></div>
+      <div class="login-tile" onclick="kplDirectOpenLogin('admin')"><b>Admin Login</b><br><small>Full control and configuration</small></div>
+      <div class="login-tile" onclick="kplDirectOpenLogin('emp')"><b>EMP Login</b><br><small>Enter and edit data</small></div>
     </div>
   </div>
 </section>
@@ -77,27 +77,18 @@
 
 <script>
 (function(){
-  window.kplOpenLogin=function(r){
-    try{
-      if(typeof window.chooseRole === 'function'){window.chooseRole(r);return;}
-      var modal=document.getElementById('pwdModal');
-      var title=document.getElementById('pwdTitle');
-      var input=document.getElementById('pwdInput');
-      var err=document.getElementById('pwdErr');
-      if(!modal||!input)return;
-      window.kplFallbackRole=r;
-      if(title)title.textContent=(r==='admin'?'Admin':'EMP')+' Login';
-      input.value='';
-      if(err)err.textContent='';
-      modal.classList.remove('hidden');
-      setTimeout(function(){input.focus();},0);
-    }catch(e){}
+  window.kplDirectOpenLogin=function(r){
+    window.kplDirectRole=r;
+    var modal=document.getElementById('pwdModal');
+    var title=document.getElementById('pwdTitle');
+    var input=document.getElementById('pwdInput');
+    var err=document.getElementById('pwdErr');
+    if(!modal)return;
+    if(title)title.textContent=(r==='admin'?'Admin':'EMP')+' Login';
+    if(input){input.value='';input.focus();}
+    if(err)err.textContent='';
+    modal.classList.remove('hidden');
   };
-  document.addEventListener('DOMContentLoaded',function(){
-    document.querySelectorAll('[data-login-role]').forEach(function(el){
-      el.addEventListener('click',function(){window.kplOpenLogin(el.getAttribute('data-login-role'));});
-    });
-  });
 })();
 </script>
 
@@ -337,6 +328,7 @@ function chooseRole(r){
   $('pwdModal').classList.remove('hidden');
 }
 async function doLogin(){
+  if(!pendingRole&&window.kplDirectRole)pendingRole=window.kplDirectRole;
   if($('pwdInput').value!==PASS[pendingRole]){$('pwdErr').textContent='Incorrect password';return}
   role=pendingRole;sessionStorage.setItem('kpl_role',role);
   await loadGoogleState();
