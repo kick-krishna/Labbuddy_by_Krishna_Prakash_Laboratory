@@ -48,6 +48,11 @@
 .filter-note{font-size:11px;color:var(--muted);margin-top:4px}
 .pill-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .small-muted{font-size:11px;color:var(--muted)}
+
+.date-input-wrap{position:relative;width:100%}
+.date-input-display{width:100%;padding-right:42px;cursor:pointer;background:white!important}
+.date-input-picker{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:2}
+.date-input-wrap:after{content:'📅';position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;z-index:1}
 @media(max-width:900px){.inline-edit{grid-template-columns:1fr 1fr}.col-editor{grid-template-columns:1fr 100px auto}}
 </style>
 <!-- SheetJS is used for reliable .xlsx/.xls import. The page still supports legacy Excel XML (.xml/.xls). -->
@@ -114,7 +119,7 @@
       <h2>Dashboard</h2>
       <div class="filters">
         <div class="fg"><label>Period</label><select id="periodMode" onchange="renderAll()"><option value="all">All time</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
-        <div class="fg"><label>Selected date/month</label><input type="date" id="periodDate" onchange="renderAll()"></div>
+        <div class="fg"><label>Selected date/month</label><div class="date-input-wrap"><input class="date-input-display" id="periodDate_display" type="text" placeholder="dd-mm-yyyy" readonly><input class="date-input-picker" type="date" id="periodDate" onchange="syncDateInput('periodDate');renderAll()"></div></div>
         <div class="fg"><label>Referred by</label><select id="dashRef" onchange="renderAll()"></select></div>
         <div class="fg"><label>Spend classification</label><select id="dashCls" onchange="renderAll()"></select></div>
         <div class="fg"><label>View by</label><select id="groupBy" onchange="renderAll()"><option value="month">Month</option><option value="week">Week</option><option value="day">Day</option></select></div>
@@ -145,8 +150,8 @@
       <div class="tbl-tools"><h2>Live Data <span class="badge" id="recCount"></span></h2><div class="toolbar"><button class="btn light" onclick="toggleFilters()">Filters</button><button class="btn light" id="balanceBtn" onclick="toggleBalance()">Balance</button><input class="search" id="search" placeholder="Search all data" oninput="renderTable()"></div></div>
       <div id="filterPanel" class="filter-panel hidden">
         <div class="form-grid">
-          <div class="fg"><label>From date</label><input type="date" id="fltFrom" onchange="renderTable()"></div>
-          <div class="fg"><label>To date</label><input type="date" id="fltTo" onchange="renderTable()"></div>
+          <div class="fg"><label>From date</label><div class="date-input-wrap"><input class="date-input-display" id="fltFrom_display" type="text" placeholder="dd-mm-yyyy" readonly><input class="date-input-picker" type="date" id="fltFrom" onchange="syncDateInput('fltFrom');renderTable()"></div></div>
+          <div class="fg"><label>To date</label><div class="date-input-wrap"><input class="date-input-display" id="fltTo_display" type="text" placeholder="dd-mm-yyyy" readonly><input class="date-input-picker" type="date" id="fltTo" onchange="syncDateInput('fltTo');renderTable()"></div></div>
           <div class="fg"><label>Referred by</label><select id="fltRef" onchange="renderTable()"></select></div>
           <div class="fg"><label>Entered by</label><select id="fltBy" onchange="renderTable()"></select></div>
           <div class="fg"><label>Minimum total</label><input type="number" id="fltMin" oninput="renderTable()"></div>
@@ -371,12 +376,30 @@ function allFields(){return baseFields.concat(customFields.filter(visible))}
 function fieldDefByKey(k){return baseFields.find(f=>f.key===k)||customFields.find(f=>f.key===k)}
 function fuzzyEnabled(f){return f && (f.fuzzy!==false) && ['text','select'].includes(f.type)}
 
+function dateInputMarkup(id,value=''){
+  const iso=toDate(value);
+  return `<div class="date-input-wrap"><input class="date-input-display" id="${esc(id)}_display" type="text" placeholder="dd-mm-yyyy" value="${esc(fmtDate(iso))}" readonly><input class="date-input-picker" id="${esc(id)}" type="date" value="${esc(iso)}" onchange="syncDateInput('${esc(id)}')"></div>`;
+}
+function syncDateInput(id){
+  const p=$(id),d=$(id+'_display');
+  if(p&&d)d.value=fmtDate(p.value);
+}
+function setDateInput(id,value){
+  const p=$(id),d=$(id+'_display');
+  if(!p)return;
+  p.value=toDate(value);
+  if(d)d.value=fmtDate(p.value);
+}
+
 function buildForm(){
   const fs=allFields();
   $('entryForm').innerHTML=fs.map(f=>{
     const cls=f.key==='desc'?'full':'';
     if(f.type==='select'){
       return `<div class="fg ${cls}"><label>${esc(f.label)}${f.req?' *':''}</label><input id="fld_${esc(f.key)}" type="text" autocomplete="off"><div class="small-muted">${fuzzyEnabled(f)?'Fuzzy suggestions enabled':''}</div></div>`;
+    }
+    if(f.type==='date'){
+      return `<div class="fg ${cls}"><label>${esc(f.label)}${f.req?' *':''}</label>${dateInputMarkup('fld_'+f.key,'')}</div>`;
     }
     return `<div class="fg ${cls}"><label>${esc(f.label)}${f.req?' *':''}</label><input id="fld_${esc(f.key)}" type="${f.type}" ${f.type==='number'?'step="any"':''}></div>`;
   }).join('')+`<div class="fg"><label>Balance Value (auto)</label><input id="fld_bal" readonly></div>`;
@@ -397,7 +420,10 @@ function calcBal(){if($('fld_bal'))$('fld_bal').value=fmt(num($('fld_total')?.va
 function isoToday(){return new Date().toISOString().slice(0,10)}
 function resetForm(){
   editingUid='';$('formTitle').textContent='New Entry';
-  allFields().forEach(f=>{const e=$('fld_'+f.key);if(e)e.value=f.key==='date'?isoToday():''});
+  allFields().forEach(f=>{
+    if(f.type==='date')setDateInput('fld_'+f.key,f.key==='date'?isoToday():'');
+    else {const e=$('fld_'+f.key);if(e)e.value='';}
+  });
   calcBal();$('formErr').textContent='';applyByLock();
 }
 function saveRecord(){
@@ -419,7 +445,10 @@ function saveRecord(){
 }
 function editRecord(u){
   const r=records.find(x=>x.uid===u);if(!r)return;editingUid=u;$('formTitle').textContent='Edit Entry';
-  allFields().forEach(f=>{const e=$('fld_'+f.key);if(e)e.value=r[f.key]??''});
+  allFields().forEach(f=>{
+    if(f.type==='date')setDateInput('fld_'+f.key,r[f.key]??'');
+    else {const e=$('fld_'+f.key);if(e)e.value=r[f.key]??'';}
+  });
   calcBal();applyByLock();$('formTitle').scrollIntoView({behavior:'smooth'});
 }
 function deleteRecord(u,e){
@@ -454,7 +483,7 @@ function refreshFilterOptions(){
 }
 function toggleFilters(){$('filterPanel').classList.toggle('hidden')}
 function toggleBalance(){balanceOnly=!balanceOnly;$('balanceBtn').classList.toggle('on',balanceOnly);renderTable()}
-function clearTableFilters(){['fltFrom','fltTo','fltRef','fltBy','fltMin','fltMax'].forEach(id=>{if($(id))$(id).value=''});balanceOnly=false;$('balanceBtn').classList.remove('on');renderTable()}
+function clearTableFilters(){['fltRef','fltBy','fltMin','fltMax'].forEach(id=>{if($(id))$(id).value=''});setDateInput('fltFrom','');setDateInput('fltTo','');balanceOnly=false;$('balanceBtn').classList.remove('on');renderTable()}
 function filteredRecords(){
   const q=$('search').value.toLowerCase(),fr=$('fltFrom').value,to=$('fltTo').value,rf=$('fltRef').value,by=$('fltBy').value,mi=$('fltMin').value,ma=$('fltMax').value;
   return records.filter(r=>
@@ -480,7 +509,7 @@ function selectedPeriod(date){
   const mode=$('periodMode').value,p=$('periodDate').value;if(mode==='all'||!p)return true;
   const d=toDate(date);if(mode==='daily')return d===p;if(mode==='weekly')return isoWeek(d)===isoWeek(p);return d.slice(0,7)===p.slice(0,7);
 }
-function resetDash(){$('periodMode').value='all';$('periodDate').value='';$('dashRef').value='';$('dashCls').value='';$('groupBy').value='month';$('refMetric').value='adv';renderAll()}
+function resetDash(){$('periodMode').value='all';setDateInput('periodDate','');$('dashRef').value='';$('dashCls').value='';$('groupBy').value='month';$('refMetric').value='adv';renderAll()}
 function periodKey(date){const d=toDate(date),g=$('groupBy').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return '(No date)';return g==='day'?d:g==='week'?isoWeek(d):d.slice(0,7)}
 function sumK(a,k){return a.reduce((t,x)=>t+num(x[k]),0)}
 function dashData(){const ref=$('dashRef').value,cls=$('dashCls').value;return{rr:records.filter(r=>selectedPeriod(r.date)&&(!ref||r.ref===ref)),ss:spends.filter(s=>selectedPeriod(s.date)&&(!cls||s.cls===cls))}}
@@ -645,6 +674,7 @@ function renderStore(){
   renderStoreFilters();
   $('storeForm').innerHTML=d.columns.map(c=>{
     const fuzzy=fuzzyEnabled(c);
+    if(c.type==='date')return `<div class="fg"><label>${esc(c.label)}</label>${dateInputMarkup('st_'+c.key,'')}</div>`;
     return `<div class="fg"><label>${esc(c.label)}</label><div class="${fuzzy?'store-ac-wrap':''}"><input id="st_${esc(c.key)}" type="${c.type==='select'?'text':c.type}" ${c.type==='number'?'step="any"':''} ${fuzzy?'autocomplete="off"':''}></div>${fuzzy?'<div class="small-muted">Fuzzy suggestions from existing values</div>':''}</div>`;
   }).join('');
   d.columns.filter(c=>fuzzyEnabled(c)).forEach(c=>attachFuzzyInput($('st_'+c.key),()=>storeArray().map(x=>x[c.key]),'st_ac_'+c.key));
@@ -655,7 +685,7 @@ function renderStoreFilters(){
   const d=storeDef();if(!d||!$('storeFilterForm'))return;
   const dc=storeDateColumn(d);
   let h=`<div class="fg"><label>Search all columns</label><input id="sf___q" value="${esc(storeFilters.__q||'')}" oninput="updateStoreFilter('__q',this.value)"></div>`;
-  if(dc)h+=`<div class="fg"><label>From date</label><input type="date" value="${esc(storeFilters.__from||'')}" onchange="updateStoreFilter('__from',this.value)"></div><div class="fg"><label>To date</label><input type="date" value="${esc(storeFilters.__to||'')}" onchange="updateStoreFilter('__to',this.value)"></div>`;
+  if(dc)h+=`<div class="fg"><label>From date</label><div class="date-input-wrap"><input class="date-input-display" type="text" placeholder="dd-mm-yyyy" value="${esc(fmtDate(storeFilters.__from||''))}" readonly><input class="date-input-picker" type="date" value="${esc(toDate(storeFilters.__from||''))}" onchange="updateStoreFilter('__from',this.value);this.previousElementSibling.value=fmtDate(this.value)"></div></div><div class="fg"><label>To date</label><div class="date-input-wrap"><input class="date-input-display" type="text" placeholder="dd-mm-yyyy" value="${esc(fmtDate(storeFilters.__to||''))}" readonly><input class="date-input-picker" type="date" value="${esc(toDate(storeFilters.__to||''))}" onchange="updateStoreFilter('__to',this.value);this.previousElementSibling.value=fmtDate(this.value)"></div></div>`;
   storeTextColumns(d).forEach(c=>h+=`<div class="fg"><label>${esc(c.label)}</label><div class="store-ac-wrap"><input id="sf_${c.key}" value="${esc(storeFilters[c.key]||'')}" autocomplete="off" oninput="updateStoreFilter('${c.key}',this.value)"></div></div>`);
   if(currentStore!=='spends')storeNumberColumns(d).filter(c=>!['check number','check amount','price','value'].includes(normTxt(c.label))).forEach(c=>h+=`<div class="fg"><label>Min ${esc(c.label)}</label><input type="number" step="any" value="${esc(storeFilters[c.key+'__min']||'')}" oninput="updateStoreFilter('${c.key}__min',this.value)"><label style="margin-top:5px">Max ${esc(c.label)}</label><input type="number" step="any" value="${esc(storeFilters[c.key+'__max']||'')}" oninput="updateStoreFilter('${c.key}__max',this.value)"></div>`);
   $('storeFilterForm').innerHTML=h;
@@ -674,12 +704,15 @@ function saveStoreItem(){
 }
 function editStoreItem(u){
   const d=storeDef(),x=storeArray().find(z=>z.uid===u);if(!x)return;editingStore=u;
-  d.columns.forEach(c=>{const e=$('st_'+c.key);if(e)e.value=x[c.key]??''});
+  d.columns.forEach(c=>{
+    if(c.type==='date')setDateInput('st_'+c.key,x[c.key]??'');
+    else {const e=$('st_'+c.key);if(e)e.value=x[c.key]??'';}
+  });
 }
 function deleteStoreItem(u){
   const a=storeArray(),i=a.findIndex(x=>x.uid===u);if(i>=0&&confirm('Delete item?')){a.splice(i,1);persist();renderStore();renderAll()}
 }
-function resetStoreForm(){editingStore='';const d=storeDef();if(!d)return;d.columns.forEach(c=>{if($('st_'+c.key))$('st_'+c.key).value=c.type==='date'?isoToday():''})}
+function resetStoreForm(){editingStore='';const d=storeDef();if(!d)return;d.columns.forEach(c=>{if(c.type==='date')setDateInput('st_'+c.key,isoToday());else if($('st_'+c.key))$('st_'+c.key).value=''})}
 function renderAdminTabs(){
   if(role!=='admin')return;
   $('tabCount').textContent=customTabs.length;
