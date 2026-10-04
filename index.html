@@ -1,13 +1,9 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Krishna Prakash Lab - Enhanced Data Updater</title>
-
 <style>
 
 :root{--mint:#eef7e8;--soft:#d6edcf;--primary:#3fa34d;--dark:#2b7a37;--lime:#a8d672;--llime:#e5f4d8;--text:#1f3b24;--muted:#5f7a63;--red:#d64545;--redbg:#fdecec;--orange:#f0a04b;--shadow:0 8px 28px rgba(43,122,55,.12)}
@@ -34,204 +30,815 @@
 
 @media(max-width:900px){.grid2,.login-grid{grid-template-columns:1fr}.config-row{grid-template-columns:1fr 1fr}.search{min-width:180px}.hrow{grid-template-columns:100px 1fr auto}}
 
-</style>
 
+/* ===== Dynamic Excel / Storage / Fuzzy enhancements ===== */
+.iconless{font-weight:800;letter-spacing:.4px}
+.import-badge{background:#eaf6ff;border-color:#b8dff7;color:#1f5d7a}
+.role-badge{margin-left:5px}
+.fuzzy-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fuzzy-line input[type=checkbox]{width:auto}
+.inline-edit{display:grid;grid-template-columns:minmax(150px,1.4fr) minmax(110px,.8fr) minmax(110px,.8fr) auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--mint)}
+.tab-editor{padding:11px;border:1px solid var(--soft);border-radius:12px;margin-bottom:10px;background:#fbfff9}
+.col-editor{display:grid;grid-template-columns:minmax(150px,1.5fr) 110px auto;gap:8px;align-items:center;margin-top:6px}
+.store-filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.store-ac-wrap{position:relative}
+.store-ac-list{position:absolute;left:0;right:0;top:100%;z-index:60;background:white;border:1px solid var(--primary);border-radius:9px;max-height:180px;overflow:auto;box-shadow:var(--shadow)}
+.store-ac-item{padding:8px 10px;cursor:pointer;font-size:12px;display:flex;justify-content:space-between;gap:7px}
+.store-ac-item:hover{background:var(--llime)}
+.filter-note{font-size:11px;color:var(--muted);margin-top:4px}
+.pill-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.small-muted{font-size:11px;color:var(--muted)}
+@media(max-width:900px){.inline-edit{grid-template-columns:1fr 1fr}.col-editor{grid-template-columns:1fr 100px auto}}
+</style>
+<!-- SheetJS is used for reliable .xlsx/.xls import. The page still supports legacy Excel XML (.xml/.xls). -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head><body>
 
-<section id="landing"><div class="card welcome"><div class="logo">?</div><h1>Welcome to Krishna Prakash Lab</h1><p>Enhanced Data Updater</p><div class="login-grid"><div class="login-tile" onclick="chooseRole('admin')">???<br><b>Admin Login</b><br><small>Full control and configuration</small></div><div class="login-tile" onclick="chooseRole('emp')">??<br><b>EMP Login</b><br><small>Enter and edit data</small></div></div></div></section>
+<section id="landing">
+  <div class="card welcome">
+    <div class="logo">KPL</div>
+    <h1>Welcome to Krishna Prakash Lab</h1>
+    <p>Enhanced Data Updater</p>
+    <div class="login-grid">
+      <div class="login-tile" onclick="chooseRole('admin')"><b>Admin Login</b><br><small>Full control and configuration</small></div>
+      <div class="login-tile" onclick="chooseRole('emp')"><b>EMP Login</b><br><small>Enter and edit data</small></div>
+    </div>
+  </div>
+</section>
 
-<div class="overlay hidden" id="pwdModal"><div class="modal"><div class="modal-head"><h2 id="pwdTitle">Login</h2><button class="x" onclick="closeModal('pwdModal')">×</button></div><div class="fg"><label>Password</label><input type="password" id="pwdInput"></div><div class="err" id="pwdErr"></div><div class="form-actions"><button class="btn" onclick="doLogin()">Login</button><button class="btn light" onclick="closeModal('pwdModal')">Cancel</button></div></div></div>
-
-<section id="app" class="hidden"><header><div class="brand"><div class="logo">?</div>Krishna Prakash Lab <span class="badge" id="roleBadge"></span></div><div class="hdr-actions"><button class="btn admin-only" onclick="exportExcel()">?? Export All</button><button class="btn admin-only light" onclick="excelFile.click()">? Import Excel</button><input class="hidden" type="file" id="excelFile" accept=".xls,.xml,.xlsx" onchange="importExcel(this)"><button class="btn admin-only light" onclick="openStore('spends')">?? Spends</button><button class="btn admin-only light" onclick="openBuilder()">? Manage Fields/Tabs</button><button class="btn admin-only light" onclick="downloadSnapshot()">?? Download Updated HTML</button><button class="btn danger" onclick="logout()">? Logout</button></div></header>
-
-<main><div class="tabs" id="customTabs"></div>
-
- 
-
-<div class="card admin-only"><h2>?? Dashboard</h2>
-
-<div class="filters">
-
-<div class="fg"><label>Period</label><select id="periodMode" onchange="renderAll()"><option value="all">All time</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
-
-<div class="fg"><label>Selected date/month</label><input type="date" id="periodDate" onchange="renderAll()"></div>
-
-<div class="fg"><label>Referred by</label><select id="dashRef" onchange="renderAll()"></select></div>
-
-<div class="fg"><label>Spend classification</label><select id="dashCls" onchange="renderAll()"></select></div>
-
-<div class="fg"><label>View by</label><select id="groupBy" onchange="renderAll()"><option value="month">Month</option><option value="week">Week</option><option value="day">Day</option></select></div>
-
-<button class="btn light" onclick="resetDash()">Reset</button>
-
+<div class="overlay hidden" id="pwdModal">
+  <div class="modal">
+    <div class="modal-head"><h2 id="pwdTitle">Login</h2><button class="x" onclick="closeModal('pwdModal')">×</button></div>
+    <div class="fg"><label>Password</label><input type="password" id="pwdInput"></div>
+    <div class="err" id="pwdErr"></div>
+    <div class="form-actions"><button class="btn" onclick="doLogin()">Login</button><button class="btn light" onclick="closeModal('pwdModal')">Cancel</button></div>
+  </div>
 </div>
 
-<div class="kpis" id="kpis"></div>
+<section id="app" class="hidden">
+  <header>
+    <div class="brand"><div class="logo">KPL</div>Krishna Prakash Lab <span class="badge" id="roleBadge"></span></div>
+    <div class="hdr-actions">
+      <button class="btn admin-only" onclick="exportExcel()">Export All</button>
+      <button class="btn admin-only light" onclick="excelFile.click()">Import Excel</button>
+      <input class="hidden" type="file" id="excelFile" accept=".xls,.xlsx,.xml" onchange="importExcel(this)">
+      <button class="btn admin-only light" onclick="openStore('spends')">Spends</button>
+      <button class="btn admin-only light" onclick="openBuilder()">Manage Fields / Tabs</button>
+      <button class="btn admin-only light" onclick="downloadSnapshot()">Download Updated HTML</button>
+      <button class="btn danger" onclick="logout()">Logout</button>
+    </div>
+  </header>
 
- 
+  <main>
+    <div class="tabs" id="customTabs"></div>
 
-<div class="panel mb"><h3 id="plTitle">?? Profit / Loss</h3><div id="plChart"></div></div>
+    <div class="card admin-only">
+      <h2>Dashboard</h2>
+      <div class="filters">
+        <div class="fg"><label>Period</label><select id="periodMode" onchange="renderAll()"><option value="all">All time</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
+        <div class="fg"><label>Selected date/month</label><input type="date" id="periodDate" onchange="renderAll()"></div>
+        <div class="fg"><label>Referred by</label><select id="dashRef" onchange="renderAll()"></select></div>
+        <div class="fg"><label>Spend classification</label><select id="dashCls" onchange="renderAll()"></select></div>
+        <div class="fg"><label>View by</label><select id="groupBy" onchange="renderAll()"><option value="month">Month</option><option value="week">Week</option><option value="day">Day</option></select></div>
+        <button class="btn light" onclick="resetDash()">Reset</button>
+      </div>
 
- 
+      <div class="kpis" id="kpis"></div>
 
-<div class="grid2 mb"><div class="panel"><h3>Period Profit / Loss</h3><div class="tbl-wrap" style="max-height:300px"><table><thead><tr><th>Period</th><th class="num">No. of patients</th><th class="num">Total</th><th class="num">Received</th><th class="num">Balance</th><th class="num">Spends</th><th class="num">Profit / Loss</th></tr></thead><tbody id="periodBody"></tbody><tfoot id="periodFoot"></tfoot></table></div></div><div class="panel"><h3>Summary</h3><div id="summary"></div></div></div>
+      <div class="panel mb"><h3 id="plTitle">Profit / Loss</h3><div id="plChart"></div></div>
 
- 
+      <div class="grid2 mb">
+        <div class="panel"><h3>Period Profit / Loss</h3><div class="tbl-wrap" style="max-height:300px"><table><thead><tr><th>Period</th><th class="num">No. of patients</th><th class="num">Total</th><th class="num">Received</th><th class="num">Balance</th><th class="num">Spends</th><th class="num">Profit / Loss</th></tr></thead><tbody id="periodBody"></tbody><tfoot id="periodFoot"></tfoot></table></div></div>
+        <div class="panel"><h3>Summary</h3><div id="summary"></div></div>
+      </div>
 
-<div class="grid2 mb"><div class="panel"><h3>?? Spends by Classification</h3><div id="spClsChart"></div></div><div class="panel"><h3 id="spTimeTitle">?? Spends Trend</h3><div id="spTimeChart"></div></div></div>
+      <div class="grid2 mb">
+        <div class="panel"><h3>Spends by Classification</h3><div id="spClsChart"></div></div>
+        <div class="panel"><h3 id="spTimeTitle">Spends Trend</h3><div id="spTimeChart"></div></div>
+      </div>
 
- 
+      <div class="panel">
+        <div class="toolbar"><h3>Referred By – Largest to Smallest</h3><div style="display:flex;gap:8px;align-items:center"><label>Measure</label><select id="refMetric" onchange="renderDashboard()"><option value="adv">Received (Income)</option><option value="total">Total Value</option><option value="bal">Balance</option><option value="cnt">No. of patients</option></select></div></div>
+        <div id="refChart"></div>
+      </div>
+    </div>
 
-<div class="panel"><div class="toolbar"><h3>?? Referred By – Largest to Smallest</h3><div style="display:flex;gap:8px;align-items:center"><label>Measure</label><select id="refMetric" onchange="renderDashboard()"><option value="adv">Received (Income)</option><option value="total">Total Value</option><option value="bal">Balance</option><option value="cnt">No. of No. of patients</option></select></div></div><div id="refChart"></div></div>
+    <div class="card">
+      <div class="tbl-tools"><h2>Live Data <span class="badge" id="recCount"></span></h2><div class="toolbar"><button class="btn light" onclick="toggleFilters()">Filters</button><button class="btn light" id="balanceBtn" onclick="toggleBalance()">Balance</button><input class="search" id="search" placeholder="Search all data" oninput="renderTable()"></div></div>
+      <div id="filterPanel" class="filter-panel hidden">
+        <div class="form-grid">
+          <div class="fg"><label>From date</label><input type="date" id="fltFrom" onchange="renderTable()"></div>
+          <div class="fg"><label>To date</label><input type="date" id="fltTo" onchange="renderTable()"></div>
+          <div class="fg"><label>Referred by</label><select id="fltRef" onchange="renderTable()"></select></div>
+          <div class="fg"><label>Entered by</label><select id="fltBy" onchange="renderTable()"></select></div>
+          <div class="fg"><label>Minimum total</label><input type="number" id="fltMin" oninput="renderTable()"></div>
+          <div class="fg"><label>Maximum total</label><input type="number" id="fltMax" oninput="renderTable()"></div>
+        </div>
+        <div class="form-actions"><button class="btn light" onclick="clearTableFilters()">Clear filters</button></div>
+      </div>
+      <div class="tbl-wrap"><table><thead><tr id="recHead"></tr></thead><tbody id="recBody"></tbody></table></div>
+    </div>
 
+    <div class="card">
+      <h2 id="formTitle">New Entry</h2>
+      <div class="form-grid" id="entryForm"></div>
+      <div class="err" id="formErr"></div>
+      <div class="form-actions"><button class="btn" onclick="saveRecord()">Save</button><button class="btn light" onclick="resetForm()">Clear</button></div>
+    </div>
+
+    <div class="card admin-only" id="customSection">
+      <h2>Custom Tabs Data <span class="badge" id="tabCount"></span></h2>
+      <p class="note" style="margin:-6px 0 12px">Every storage sheet imported from Excel or added in Manage Fields / Tabs appears here automatically. Imported columns from "No. of patients" are added to Live Data fields.</p>
+      <div id="adminTabsData"></div>
+    </div>
+  </main>
+</section>
+
+<div class="overlay hidden" id="storeModal">
+  <div class="modal wide">
+    <div class="modal-head"><h2 id="storeTitle"></h2><button class="x" onclick="closeModal('storeModal')">×</button></div>
+    <div class="panel" style="margin-bottom:12px">
+      <div class="toolbar"><h3>Storage Filters</h3><button class="btn sm light" onclick="clearStoreFilters()">Clear filters</button></div>
+      <div id="storeFilterForm" class="store-filter-grid"></div>
+      <div class="filter-note">Text filters use fuzzy matching. The selected/suggested values are based on data already present in this storage.</div>
+    </div>
+    <div class="form-grid" id="storeForm"></div>
+    <div class="err" id="storeErr"></div>
+    <div class="form-actions"><button class="btn" onclick="saveStoreItem()">Save</button><button class="btn light" onclick="resetStoreForm()">Clear</button></div>
+    <div class="tbl-wrap" style="margin-top:15px"><table><thead><tr id="storeHead"></tr></thead><tbody id="storeBody"></tbody></table></div>
+  </div>
 </div>
 
- 
+<div class="overlay hidden" id="builderModal">
+  <div class="modal wide">
+    <div class="modal-head"><h2>Admin Field and Storage Manager</h2><button class="x" onclick="closeModal('builderModal')">×</button></div>
 
-<div class="card"><div class="tbl-tools"><h2>?? Live Data <span class="badge" id="recCount"></span></h2><div class="toolbar"><button class="btn light" onclick="toggleFilters()">?? Filters</button><button class="btn light" id="balanceBtn" onclick="toggleBalance()">Balance</button><input class="search" id="search" placeholder="Search all data" oninput="renderTable()"></div></div><div id="filterPanel" class="filter-panel hidden"><div class="form-grid"><div class="fg"><label>From date</label><input type="date" id="fltFrom" onchange="renderTable()"></div><div class="fg"><label>To date</label><input type="date" id="fltTo" onchange="renderTable()"></div><div class="fg"><label>Referred by</label><select id="fltRef" onchange="renderTable()"></select></div><div class="fg"><label>Entered by</label><select id="fltBy" onchange="renderTable()"></select></div><div class="fg"><label>Minimum total</label><input type="number" id="fltMin" oninput="renderTable()"></div><div class="fg"><label>Maximum total</label><input type="number" id="fltMax" oninput="renderTable()"></div></div><div class="form-actions"><button class="btn light" onclick="clearTableFilters()">Clear filters</button></div></div><div class="tbl-wrap"><table><thead><tr id="recHead"></tr></thead><tbody id="recBody"></tbody></table></div></div>
+    <h3>Add an entry field</h3>
+    <div class="config-row">
+      <div class="fg"><label>Field name</label><input id="newFieldName" placeholder="e.g. Age"></div>
+      <div class="fg"><label>Type</label><select id="newFieldType"><option>text</option><option>number</option><option>date</option><option>select</option></select></div>
+      <div class="fg"><label>Visible to</label><select id="newFieldRole"><option value="both">Both</option><option value="emp">EMP only</option><option value="admin">Admin only</option></select></div>
+      <div class="fg"><label>Fuzzy logic</label><label class="fuzzy-line"><input type="checkbox" id="newFieldFuzzy" checked> Enable</label></div>
+      <button class="btn" onclick="addField()">Add</button>
+    </div>
+    <div id="fieldList"></div>
 
-<div class="card"><h2 id="formTitle">?? New Entry</h2><div class="form-grid" id="entryForm"></div><div class="err" id="formErr"></div><div class="form-actions"><button class="btn" onclick="saveRecord()">?? Save</button><button class="btn light" onclick="resetForm()">Clear</button></div></div>
+    <hr style="margin:18px 0;border:0;border-top:1px solid var(--soft)">
 
- 
+    <h3>Add a storage tab</h3>
+    <div class="config-row">
+      <div class="fg"><label>Tab name</label><input id="newTabName" placeholder="e.g. Check"></div>
+      <div class="fg"><label>Columns, comma-separated</label><input id="newTabCols" placeholder="Check Number, Amount, Start Date, End Date, Paid"></div>
+      <div class="fg"><label>Visible to</label><select id="newTabRole"><option value="both">Both</option><option value="emp">EMP only</option><option value="admin">Admin only</option></select></div>
+      <div class="fg"><label>Text fuzzy logic</label><label class="fuzzy-line"><input type="checkbox" id="newTabFuzzy" checked> Enable</label></div>
+      <button class="btn" onclick="addTab()">Add</button>
+    </div>
+    <div id="tabList"></div>
 
-<div class="card admin-only" id="customSection"><h2>?? Custom Tabs Data <span class="badge" id="tabCount"></span></h2><p class="note" style="margin:-6px 0 12px">Every tab added via "Manage Fields/Tabs" appears here automatically for Admin (including EMP-only tabs). Tabs with a date column follow the Dashboard Period filter.</p><div id="adminTabsData"></div></div>
-
-</main></section>
-
-<div class="overlay hidden" id="storeModal"><div class="modal wide"><div class="modal-head"><h2 id="storeTitle"></h2><button class="x" onclick="closeModal('storeModal')">×</button></div><div class="form-grid" id="storeForm"></div><div class="err" id="storeErr"></div><div class="form-actions"><button class="btn" onclick="saveStoreItem()">Save</button><button class="btn light" onclick="resetStoreForm()">Clear</button></div><div class="tbl-wrap" style="margin-top:15px"><table><thead><tr id="storeHead"></tr></thead><tbody id="storeBody"></tbody></table></div></div></div>
-
-<div class="overlay hidden" id="builderModal"><div class="modal wide"><div class="modal-head"><h2>? Admin Field and Storage Manager</h2><button class="x" onclick="closeModal('builderModal')">×</button></div><h3>Add an entry field</h3><div class="config-row"><div class="fg"><label>Field name</label><input id="newFieldName" placeholder="e.g. Age"></div><div class="fg"><label>Type</label><select id="newFieldType"><option>text</option><option>number</option><option>date</option><option>select</option></select></div><div class="fg"><label>Visible to</label><select id="newFieldRole"><option value="both">Both</option><option value="emp">EMP only</option><option value="admin">Admin only</option></select></div><button class="btn" onclick="addField()">Add</button></div><div id="fieldList"></div><hr style="margin:18px 0;border:0;border-top:1px solid var(--soft)"><h3>Add a storage tab</h3><div class="config-row"><div class="fg"><label>Tab name</label><input id="newTabName" placeholder="e.g. Check"></div><div class="fg"><label>Columns, comma-separated</label><input id="newTabCols" placeholder="Check Number, Amount, Start Date, End Date, Paid"></div><div class="fg"><label>Visible to</label><select id="newTabRole"><option value="both">Both</option><option value="emp">EMP only</option><option value="admin">Admin only</option></select></div><button class="btn" onclick="addTab()">Add</button></div><div id="tabList"></div></div></div>
+    <p class="note" style="margin-top:12px"><b>Excel behavior:</b> extra columns in the "No. of patients" sheet become Live Data fields; every other Excel sheet becomes a storage tab. Imported fields/tabs can be renamed, role-controlled, and edited here.</p>
+  </div>
+</div>
 
 <div id="toast"></div>
 
 <script id="seed-data" type="application/json">{"records":[],"spends":[],"customFields":[],"customTabs":[],"customData":{}}</script>
 
 <script>
+const PASS={admin:'Krishna@94',emp:'Durga143'};
+const K={r:'kpl_records3',s:'kpl_spends3',f:'kpl_fields3',t:'kpl_tabs3',d:'kpl_customdata3'};
+// Google Sheets backend. Deploy the companion Apps Script as a Web App and paste
+// its /exec URL below. The spreadsheet ID is already fixed in the Apps Script.
+const GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/AKfycbwJDuNW3JAk1HcRk1u4BT4fEWtHT9Tk325nLgQbFghpPS7L4G9pEg_3Ox1pyQAkGaCzTA/exec;
+const $=id=>document.getElementById(id);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>Number(v)||0;
+const fmt=n=>num(n).toLocaleString('en-IN',{maximumFractionDigits:2});
+const normTxt=s=>String(s??'').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+const SNAPSHOT_MODE=false;
+const SNAPSHOT_INIT='kpl_snapshot_initialized_v1';
+let seed={};
+try{seed=JSON.parse($('seed-data').textContent)}catch(e){}
+const load=(k,def)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){return def}};
+let records=load(K.r,seed.records||[]);
+let spends=load(K.s,seed.spends||[]);
+let customFields=load(K.f,seed.customFields||[]);
+let customTabs=load(K.t,seed.customTabs||[]);
+let customData=load(K.d,seed.customData||{});
+let role='',pendingRole='',editingUid='',balanceOnly=false,currentStore='',editingStore='';
+let storeFilters={},storeFilterTimer=null;
 
-const PASS={admin:'Krishna@94',emp:'Durga143'}, K={r:'kpl_records2',s:'kpl_spends2',f:'kpl_fields2',t:'kpl_tabs2',d:'kpl_customdata2'};
+let googleRemoteApplying=false,googleSaveTimer=null;
+function localCachePersist(){
+  localStorage.setItem(K.r,JSON.stringify(records));
+  localStorage.setItem(K.s,JSON.stringify(spends));
+  localStorage.setItem(K.f,JSON.stringify(customFields));
+  localStorage.setItem(K.t,JSON.stringify(customTabs));
+  localStorage.setItem(K.d,JSON.stringify(customData));
+}
+function currentState(){return{records,spends,customFields,customTabs,customData}}
+function applyState(st){
+  if(!st||typeof st!=='object')return;
+  records=Array.isArray(st.records)?st.records:[];
+  spends=Array.isArray(st.spends)?st.spends:[];
+  customFields=Array.isArray(st.customFields)?st.customFields:[];
+  customTabs=Array.isArray(st.customTabs)?st.customTabs:[];
+  customData=st.customData&&typeof st.customData==='object'?st.customData:{};
+  localCachePersist();
+}
+function hasLocalData(){
+  return !!(records.length||spends.length||customFields.length||customTabs.length||Object.values(customData).some(v=>Array.isArray(v)&&v.length));
+}
+function persist(){
+  localCachePersist();
+  if(!googleRemoteApplying&&GOOGLE_APPS_SCRIPT_URL&&/^https:\/\/script\.google\.com\/macros\/s\//.test(GOOGLE_APPS_SCRIPT_URL)){
+    clearTimeout(googleSaveTimer);
+    googleSaveTimer=setTimeout(()=>googleSaveState(),500);
+  }
+}
+function loadGoogleState(){
+  return new Promise(resolve=>{
+    if(SNAPSHOT_MODE||!GOOGLE_APPS_SCRIPT_URL||GOOGLE_APPS_SCRIPT_URL.includes('PASTE_YOUR_')){resolve(false);return}
+    const cb='kplGoogleCb_'+uid();
+    let done=false;
+    const script=document.createElement('script');
+    const cleanup=()=>{script.remove();try{delete window[cb]}catch(e){window[cb]=undefined}};
+    const finish=v=>{if(done)return;done=true;cleanup();resolve(v)};
+    window[cb]=(r)=>{
+      if(!r?.ok||!r.state){finish(false);return}
+      googleRemoteApplying=true;
+      try{
+        if(r.hasState===false){
+          const hadLocal=hasLocalData();
+          localCachePersist();
+          finish(false);
+          googleRemoteApplying=false;
+          if(hadLocal)setTimeout(()=>googleSaveState(),100);
+          return;
+        }
+        applyState(r.state);
+        finish(true);
+      }finally{googleRemoteApplying=false}
+    };
+    script.onerror=()=>finish(false);
+    script.src=GOOGLE_APPS_SCRIPT_URL+'?action=getState&callback='+encodeURIComponent(cb)+'&t='+Date.now();
+    document.head.appendChild(script);
+    setTimeout(()=>finish(false),15000);
+  });
+}
+function googleSaveState(){
+  if(SNAPSHOT_MODE||!GOOGLE_APPS_SCRIPT_URL||GOOGLE_APPS_SCRIPT_URL.includes('PASTE_YOUR_'))return;
+  const frameName='kplSyncFrame_'+uid();
+  const frame=document.createElement('iframe');frame.name=frameName;frame.style.display='none';document.body.appendChild(frame);
+  const form=document.createElement('form');form.method='POST';form.action=GOOGLE_APPS_SCRIPT_URL;form.target=frameName;form.style.display='none';
+  const add=(n,v)=>{const i=document.createElement('input');i.type='hidden';i.name=n;i.value=v;form.appendChild(i)};
+  add('action','saveState');add('payload',JSON.stringify(currentState()));
+  document.body.appendChild(form);form.submit();
+  setTimeout(()=>{form.remove();frame.remove()},8000);
+}
 
-const $=id=>document.getElementById(id), uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])), num=v=>Number(v)||0, fmt=n=>num(n).toLocaleString('en-IN',{maximumFractionDigits:2});
+if(SNAPSHOT_MODE && !localStorage.getItem(SNAPSHOT_INIT)){
+  persist();
+  localStorage.setItem(SNAPSHOT_INIT,'1');
+}
+function toast(m,b=false){const t=$('toast');t.textContent=m;t.className='show'+(b?' bad':'');setTimeout(()=>t.className='',2400)}
+function closeModal(id){$(id)?.classList.add('hidden')}
 
-let seed={};try{seed=JSON.parse($('seed-data').textContent)}catch(e){} const load=(k,def)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){return def}};
+function chooseRole(r){
+  pendingRole=r;
+  $('pwdTitle').textContent=(r==='admin'?'Admin':'EMP')+' Login';
+  $('pwdInput').value='';$('pwdErr').textContent='';
+  $('pwdModal').classList.remove('hidden');
+}
+async function doLogin(){
+  if($('pwdInput').value!==PASS[pendingRole]){$('pwdErr').textContent='Incorrect password';return}
+  role=pendingRole;sessionStorage.setItem('kpl_role',role);
+  await loadGoogleState();
+  showApp();
+}
+function showApp(){
+  closeModal('pwdModal');$('landing').classList.add('hidden');$('app').classList.remove('hidden');
+  $('roleBadge').textContent=role.toUpperCase();
+  document.querySelectorAll('.admin-only').forEach(x=>x.classList.toggle('hidden',role!=='admin'));
+  buildForm();renderAll();
+}
+function logout(){sessionStorage.removeItem('kpl_role');sessionStorage.removeItem('kpl_by');location.reload()}
 
-let records=load(K.r,seed.records||[]),spends=load(K.s,seed.spends||[]),customFields=load(K.f,seed.customFields||[]),customTabs=load(K.t,seed.customTabs||[]),customData=load(K.d,seed.customData||{});let role='',pendingRole='',editingUid='',balanceOnly=false,currentStore='',editingStore='';
+const baseFields=[
+  {key:'date',label:'Date',type:'date',req:1,fuzzy:false},
+  {key:'id',label:'ID',type:'text',req:1,fuzzy:false},
+  {key:'name',label:'Name',type:'text',req:1,fuzzy:false},
+  {key:'phone',label:'Phone',type:'text',fuzzy:false},
+  {key:'desc',label:'Description',type:'text',fuzzy:false},
+  {key:'ref',label:'Referred By',type:'text',fuzzy:true},
+  {key:'total',label:'Total Value',type:'number',req:1,fuzzy:false},
+  {key:'adv',label:'Received Value',type:'number',fuzzy:false},
+  {key:'by',label:'Entered By',type:'text',req:1,fuzzy:false}
+];
 
-function persist(){localStorage.setItem(K.r,JSON.stringify(records));localStorage.setItem(K.s,JSON.stringify(spends));localStorage.setItem(K.f,JSON.stringify(customFields));localStorage.setItem(K.t,JSON.stringify(customTabs));localStorage.setItem(K.d,JSON.stringify(customData))}function toast(m,b=false){const t=$('toast');t.textContent=m;t.className='show'+(b?' bad':'');setTimeout(()=>t.className='',2400)}function closeModal(id){$(id).classList.add('hidden')}
+function visible(f){return role==='admin'||!f.role||f.role==='both'||f.role===role}
+function allFields(){return baseFields.concat(customFields.filter(visible))}
+function fieldDefByKey(k){return baseFields.find(f=>f.key===k)||customFields.find(f=>f.key===k)}
+function fuzzyEnabled(f){return f && (f.fuzzy!==false) && ['text','select'].includes(f.type)}
 
-function chooseRole(r){pendingRole=r;$('pwdTitle').textContent=(r==='admin'?'Admin':'EMP')+' Login';$('pwdInput').value='';$('pwdErr').textContent='';$('pwdModal').classList.remove('hidden')}function doLogin(){if($('pwdInput').value!==PASS[pendingRole]){$('pwdErr').textContent='Incorrect password';return}role=pendingRole;sessionStorage.setItem('kpl_role',role);showApp()}function showApp(){closeModal('pwdModal');$('landing').classList.add('hidden');$('app').classList.remove('hidden');$('roleBadge').textContent=role.toUpperCase();document.querySelectorAll('.admin-only').forEach(x=>x.classList.toggle('hidden',role!=='admin'));buildForm();renderAll()}function logout(){sessionStorage.removeItem('kpl_role');sessionStorage.removeItem('kpl_by');location.reload()}
+function buildForm(){
+  const fs=allFields();
+  $('entryForm').innerHTML=fs.map(f=>{
+    const cls=f.key==='desc'?'full':'';
+    if(f.type==='select'){
+      return `<div class="fg ${cls}"><label>${esc(f.label)}${f.req?' *':''}</label><input id="fld_${esc(f.key)}" type="text" autocomplete="off"><div class="small-muted">${fuzzyEnabled(f)?'Fuzzy suggestions enabled':''}</div></div>`;
+    }
+    return `<div class="fg ${cls}"><label>${esc(f.label)}${f.req?' *':''}</label><input id="fld_${esc(f.key)}" type="${f.type}" ${f.type==='number'?'step="any"':''}></div>`;
+  }).join('')+`<div class="fg"><label>Balance Value (auto)</label><input id="fld_bal" readonly></div>`;
+  ['fld_total','fld_adv'].forEach(id=>$(id)&&$(id).addEventListener('input',calcBal));
+  setupAllFuzzyFormInputs();resetForm();
+}
+function currentFieldValues(key){
+  const vals=[];records.forEach(r=>{if(String(r[key]??'').trim())vals.push(String(r[key]).trim())});
+  return [...new Set(vals)];
+}
+function setupAllFuzzyFormInputs(){
+  allFields().filter(f=>fuzzyEnabled(f)).forEach(f=>{
+    const inp=$('fld_'+f.key);if(inp) attachFuzzyInput(inp,()=>currentFieldValues(f.key),'fld_ac_'+f.key);
+  });
+  const ref=$('fld_ref');if(ref)ref.placeholder='Type to search previous names';
+}
+function calcBal(){if($('fld_bal'))$('fld_bal').value=fmt(num($('fld_total')?.value)-num($('fld_adv')?.value))}
+function isoToday(){return new Date().toISOString().slice(0,10)}
+function resetForm(){
+  editingUid='';$('formTitle').textContent='New Entry';
+  allFields().forEach(f=>{const e=$('fld_'+f.key);if(e)e.value=f.key==='date'?isoToday():''});
+  calcBal();$('formErr').textContent='';applyByLock();
+}
+function saveRecord(){
+  const r={};
+  allFields().forEach(f=>{
+    const e=$('fld_'+f.key);if(!e)return;
+    r[f.key]=f.type==='number'?num(e.value):String(e.value??'').trim();
+  });
+  const miss=allFields().filter(f=>f.req&&!String(r[f.key]??'').trim()).map(f=>f.label);
+  if(miss.length){$('formErr').textContent='Required: '+miss.join(', ');return}
+  if(num(r.adv)>num(r.total)){$('formErr').textContent='Received cannot exceed Total';return}
+  r.bal=+(num(r.total)-num(r.adv)).toFixed(2);
+  if(!editingUid&&!sessionStorage.getItem('kpl_by'))sessionStorage.setItem('kpl_by',r.by);
+  if(editingUid){
+    const i=records.findIndex(x=>x.uid===editingUid);
+    if(i>=0)records[i]={...records[i],...r,updatedAt:Date.now()};
+  }else records.push({uid:uid(),...r,createdAt:Date.now()});
+  persist();resetForm();renderAll();toast('Entry saved');
+}
+function editRecord(u){
+  const r=records.find(x=>x.uid===u);if(!r)return;editingUid=u;$('formTitle').textContent='Edit Entry';
+  allFields().forEach(f=>{const e=$('fld_'+f.key);if(e)e.value=r[f.key]??''});
+  calcBal();applyByLock();$('formTitle').scrollIntoView({behavior:'smooth'});
+}
+function deleteRecord(u,e){
+  e.stopPropagation();if(confirm('Delete this entry?')){records=records.filter(x=>x.uid!==u);persist();renderAll()}
+}
 
-const baseFields=[{key:'date',label:'Date',type:'date',req:1},{key:'id',label:'ID',type:'text',req:1},{key:'name',label:'Name',type:'text',req:1},{key:'phone',label:'Phone',type:'text'},{key:'desc',label:'Description',type:'text'},{key:'ref',label:'Referred By',type:'text'},{key:'total',label:'Total Value',type:'number',req:1},{key:'adv',label:'Received Value',type:'number'},{key:'by',label:'Entered By',type:'text',req:1}];
+function toDate(v){
+  if(!v)return '';
+  if(v instanceof Date&&!isNaN(v))return new Date(v.getTime()-v.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  const s=String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  const m=/^(\d{2})[-\/](\d{2})[-\/](\d{4})$/.exec(s);if(m)return `${m[3]}-${m[2]}-${m[1]}`;
+  const d=new Date(s);return isNaN(d)?s.slice(0,10):new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+}
+function fmtDate(v){
+  const d=toDate(v);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return String(v??'');
+  const [y,m,day]=d.split('-');
+  return `${day}-${m}-${y}`;
+}
+function refreshFilterOptions(){
+  const opt=(id,vals)=>{
+    const e=$(id);if(!e)return;const old=e.value;
+    e.innerHTML='<option value="">All</option>'+[...new Set(vals.filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b)).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    e.value=[...e.options].some(o=>o.value===old)?old:'';
+  };
+  opt('fltRef',records.map(r=>r.ref));opt('fltBy',records.map(r=>r.by));opt('dashRef',records.map(r=>r.ref));opt('dashCls',spends.map(s=>s.cls));
+}
+function toggleFilters(){$('filterPanel').classList.toggle('hidden')}
+function toggleBalance(){balanceOnly=!balanceOnly;$('balanceBtn').classList.toggle('on',balanceOnly);renderTable()}
+function clearTableFilters(){['fltFrom','fltTo','fltRef','fltBy','fltMin','fltMax'].forEach(id=>{if($(id))$(id).value=''});balanceOnly=false;$('balanceBtn').classList.remove('on');renderTable()}
+function filteredRecords(){
+  const q=$('search').value.toLowerCase(),fr=$('fltFrom').value,to=$('fltTo').value,rf=$('fltRef').value,by=$('fltBy').value,mi=$('fltMin').value,ma=$('fltMax').value;
+  return records.filter(r=>
+    (!q||Object.values(r).join(' ').toLowerCase().includes(q))&&
+    (!balanceOnly||num(r.bal)>0)&&(!fr||toDate(r.date)>=fr)&&(!to||toDate(r.date)<=to)&&
+    (!rf||r.ref===rf)&&(!by||r.by===by)&&(mi===''||num(r.total)>=num(mi))&&(ma===''||num(r.total)<=num(ma))
+  ).sort((a,b)=>toDate(b.date).localeCompare(toDate(a.date)));
+}
+function renderTable(){
+  const fs=allFields();
+  $('recHead').innerHTML='<th>#</th>'+fs.map(f=>`<th class="${f.type==='number'?'num':''}">${esc(f.label)}</th>`).join('')+'<th class="num">Balance</th>'+(role==='admin'?'<th>Action</th>':'');
+  const l=filteredRecords();$('recCount').textContent=l.length+'/'+records.length;
+  $('recBody').innerHTML=l.length?l.map((r,i)=>`<tr class="click" onclick="editRecord('${r.uid}')"><td>${i+1}</td>${fs.map(f=>`<td class="${f.type==='number'?'num':''}">${f.type==='number'?fmt(r[f.key]):f.type==='date'?esc(fmtDate(r[f.key])||'–'):esc(r[f.key]||'–')}</td>`).join('')}<td class="num ${num(r.bal)>0?'neg':''}">${fmt(r.bal)}</td>${role==='admin'?`<td><button class="btn sm danger" onclick="deleteRecord('${r.uid}',event)">Delete</button></td>`:''}</tr>`).join(''):'<tr><td colspan="30" class="empty">No matching data</td></tr>';
+}
 
-/* Admin sees everything (all fields & tabs, incl. EMP-only). EMP sees 'both' + 'emp'. */
-
-function visible(f){return role==='admin'||!f.role||f.role==='both'||f.role===role}function allFields(){return baseFields.concat(customFields.filter(visible))}function buildForm(){const fs=allFields();$('entryForm').innerHTML=fs.map(f=>`<div class="fg ${f.key==='desc'?'full':''}"><label>${esc(f.label)}${f.req?' *':''}</label><input id="fld_${esc(f.key)}" type="${f.type==='select'?'text':f.type}" ${f.type==='number'?'step="any"':''}></div>`).join('')+`<div class="fg"><label>Balance Value (auto)</label><input id="fld_bal" readonly></div>`;['fld_total','fld_adv'].forEach(id=>$(id)&&$(id).addEventListener('input',calcBal));setupRefAC();resetForm()}
-
-function calcBal(){if($('fld_bal'))$('fld_bal').value=fmt(num($('fld_total')?.value)-num($('fld_adv')?.value))}function isoToday(){return new Date().toISOString().slice(0,10)}function resetForm(){editingUid='';$('formTitle').textContent='?? New Entry';allFields().forEach(f=>{const e=$('fld_'+f.key);if(e)e.value=f.key==='date'?isoToday():''});calcBal();$('formErr').textContent='';applyByLock()}function saveRecord(){const r={};allFields().forEach(f=>{const e=$('fld_'+f.key);r[f.key]=f.type==='number'?num(e.value):e.value.trim()});const miss=allFields().filter(f=>f.req&&!String(r[f.key]??'').trim()).map(f=>f.label);if(miss.length){$('formErr').textContent='Required: '+miss.join(', ');return}if(num(r.adv)>num(r.total)){$('formErr').textContent='Received cannot exceed Total';return}r.bal=+(num(r.total)-num(r.adv)).toFixed(2);if(r.ref){const hit=refOptions().find(o=>normTxt(o.label)===normTxt(r.ref));if(hit)r.ref=hit.label}if(!editingUid&&!sessionStorage.getItem('kpl_by'))sessionStorage.setItem('kpl_by',r.by);if(editingUid){const i=records.findIndex(x=>x.uid===editingUid);records[i]={...records[i],...r,updatedAt:Date.now()}}else records.push({uid:uid(),...r,createdAt:Date.now()});persist();resetForm();renderAll();toast('Entry saved')}
-
-function editRecord(u){const r=records.find(x=>x.uid===u);if(!r)return;editingUid=u;$('formTitle').textContent='?? Edit Entry';allFields().forEach(f=>{const e=$('fld_'+f.key);if(e)e.value=r[f.key]??''});calcBal();applyByLock();$('formTitle').scrollIntoView({behavior:'smooth'})}function deleteRecord(u,e){e.stopPropagation();if(confirm('Delete this entry?')){records=records.filter(x=>x.uid!==u);persist();renderAll()}}
-
-function toDate(v){if(!v)return '';if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;const m=/^(\d{2})-(\d{2})-(\d{4})$/.exec(v);return m?`${m[3]}-${m[2]}-${m[1]}`:v}function refreshFilterOptions(){const opt=(id,vals)=>{const e=$(id),old=e.value;e.innerHTML='<option value="">All</option>'+[...new Set(vals.filter(Boolean))].sort().map(v=>`<option>${esc(v)}</option>`).join('');e.value=old};opt('fltRef',records.map(r=>r.ref));opt('fltBy',records.map(r=>r.by));opt('dashRef',records.map(r=>r.ref));opt('dashCls',spends.map(s=>s.cls))}function toggleFilters(){$('filterPanel').classList.toggle('hidden')}function toggleBalance(){balanceOnly=!balanceOnly;$('balanceBtn').classList.toggle('on',balanceOnly);renderTable()}function clearTableFilters(){['fltFrom','fltTo','fltRef','fltBy','fltMin','fltMax'].forEach(id=>$(id).value='');balanceOnly=false;$('balanceBtn').classList.remove('on');renderTable()}
-
-function filteredRecords(){const q=$('search').value.toLowerCase(),fr=$('fltFrom').value,to=$('fltTo').value,rf=$('fltRef').value,by=$('fltBy').value,mi=$('fltMin').value,ma=$('fltMax').value;return records.filter(r=>(!q||Object.values(r).join(' ').toLowerCase().includes(q))&&(!balanceOnly||num(r.bal)>0)&&(!fr||toDate(r.date)>=fr)&&(!to||toDate(r.date)<=to)&&(!rf||r.ref===rf)&&(!by||r.by===by)&&(mi===''||num(r.total)>=num(mi))&&(ma===''||num(r.total)<=num(ma))).sort((a,b)=>toDate(b.date).localeCompare(toDate(a.date)))}function renderTable(){const fs=allFields();$('recHead').innerHTML='<th>#</th>'+fs.map(f=>`<th class="${f.type==='number'?'num':''}">${esc(f.label)}</th>`).join('')+'<th class="num">Balance</th>'+(role==='admin'?'<th>Action</th>':'');const l=filteredRecords();$('recCount').textContent=l.length+'/'+records.length;$('recBody').innerHTML=l.length?l.map((r,i)=>`<tr class="click" onclick="editRecord('${r.uid}')"><td>${i+1}</td>${fs.map(f=>`<td class="${f.type==='number'?'num':''}">${f.type==='number'?fmt(r[f.key]):esc(r[f.key]||'–')}</td>`).join('')}<td class="num ${num(r.bal)>0?'neg':''}">${fmt(r.bal)}</td>${role==='admin'?`<td><button class="btn sm danger" onclick="deleteRecord('${r.uid}',event)">Delete</button></td>`:''}</tr>`).join(''):'<tr><td colspan="30" class="empty">No matching data</td></tr>'}
-
- 
-
-/* ================= DASHBOARD (Income = Received) ================= */
-
-function isoWeek(ds){const d=new Date(ds+'T00:00:00Z');if(isNaN(d))return '';d.setUTCDate(d.getUTCDate()+3-((d.getUTCDay()+6)%7));const y=d.getUTCFullYear(),w=Math.ceil(((d-Date.UTC(y,0,1))/864e5+1)/7);return y+'-W'+String(w).padStart(2,'0')}
-
-function selectedPeriod(date){const mode=$('periodMode').value,p=$('periodDate').value;if(mode==='all'||!p)return true;const d=toDate(date);if(mode==='daily')return d===p;if(mode==='weekly')return isoWeek(d)===isoWeek(p);return d.slice(0,7)===p.slice(0,7)}
-
+/* ================= DASHBOARD ================= */
+function isoWeek(ds){
+  const d=new Date(ds+'T00:00:00Z');if(isNaN(d))return '';
+  d.setUTCDate(d.getUTCDate()+3-((d.getUTCDay()+6)%7));
+  const y=d.getUTCFullYear(),w=Math.ceil(((d-Date.UTC(y,0,1))/864e5+1)/7);return y+'-W'+String(w).padStart(2,'0');
+}
+function selectedPeriod(date){
+  const mode=$('periodMode').value,p=$('periodDate').value;if(mode==='all'||!p)return true;
+  const d=toDate(date);if(mode==='daily')return d===p;if(mode==='weekly')return isoWeek(d)===isoWeek(p);return d.slice(0,7)===p.slice(0,7);
+}
 function resetDash(){$('periodMode').value='all';$('periodDate').value='';$('dashRef').value='';$('dashCls').value='';$('groupBy').value='month';$('refMetric').value='adv';renderAll()}
-
 function periodKey(date){const d=toDate(date),g=$('groupBy').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return '(No date)';return g==='day'?d:g==='week'?isoWeek(d):d.slice(0,7)}
-
 function sumK(a,k){return a.reduce((t,x)=>t+num(x[k]),0)}
-
 function dashData(){const ref=$('dashRef').value,cls=$('dashCls').value;return{rr:records.filter(r=>selectedPeriod(r.date)&&(!ref||r.ref===ref)),ss:spends.filter(s=>selectedPeriod(s.date)&&(!cls||s.cls===cls))}}
-
 function shortN(v){const a=Math.abs(v),s=v<0?'-':'';if(a>=1e7)return s+(a/1e7).toFixed(1)+'Cr';if(a>=1e5)return s+(a/1e5).toFixed(1)+'L';if(a>=1e3)return s+(a/1e3).toFixed(1)+'K';return s+Math.round(a)}
+function vChart(id,labels,series){
+  const el=$(id);if(!labels.length){el.innerHTML='<div class="empty">No data for the selected filters</div>';return}
+  const legend='<div class="legend">'+series.flatMap(s=>s.legend||[{n:s.name,c:s.color}]).map(l=>`<span><i style="background:${l.c}"></i>${esc(l.n)}</span>`).join('')+'</div>';
+  const vals=series.flatMap(s=>s.values),mx=Math.max(0,...vals),mn=Math.min(0,...vals),rng=(mx-mn)||1,H=280,pt=14,pb=62,pl=62,pr=12,gw=Math.max(46,series.length*20+18),avail=(el.clientWidth||700)-4,W=Math.max(avail,pl+pr+labels.length*gw),gW=(W-pl-pr)/labels.length,plotH=H-pt-pb,y=v=>pt+(mx-v)/rng*plotH,y0=y(0),bw=Math.min(34,(gW-14)/series.length);let g='';
+  for(let i=0;i<=4;i++){const v=mn+rng*i/4,yy=y(v);g+=`<line x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}" stroke="#e5f4d8"/><text x="${pl-6}" y="${yy+4}" text-anchor="end" font-size="10" fill="#5f7a63">${shortN(v)}</text>`}
+  labels.forEach((l,i)=>{const cx=pl+i*gW+gW/2,start=cx-bw*series.length/2;series.forEach((s,j)=>{const v=s.values[i]||0,top=Math.min(y(v),y0),h=Math.max(Math.abs(y(v)-y0),v?1:0),c=typeof s.color==='function'?s.color(v):s.color;g+=`<rect x="${start+j*bw+1}" y="${top}" width="${bw-2}" height="${h}" fill="${c}" rx="3"><title>${esc(l)} | ${esc(typeof s.name==='function'?s.name(v):s.name)}: ${fmt(v)}</title></rect>`});g+=`<text x="${cx}" y="${H-pb+14}" font-size="10.5" text-anchor="end" fill="#1f3b24" transform="rotate(-35 ${cx} ${H-pb+14})">${esc(l)}</text>`});
+  g+=`<line x1="${pl}" x2="${W-pr}" y1="${y0}" y2="${y0}" stroke="#2b7a37" stroke-width="1.2"/>`;
+  el.innerHTML=legend+`<div class="chart-scroll"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Segoe UI,Arial">${g}</svg></div>`;
+}
+function hChart(id,items,color,isCount){
+  const el=$(id);if(!items.length){el.innerHTML='<div class="empty">No data for the selected filters</div>';return}
+  const mx=Math.max(...items.map(i=>i.value),1);
+  el.innerHTML='<div class="hbars">'+items.map((it,i)=>`<div class="hrow" title="${esc(it.label)}: ${fmt(it.value)}"><span class="hl">${i+1}. ${esc(it.label)}</span><div class="htrack"><div class="hbar" style="width:${Math.max(it.value/mx*100,0.6)}%;background:${typeof color==='function'?color(i):color}"></div></div><span class="hv">${isCount?fmt(it.value):'₹ '+fmt(it.value)}${it.sub?`<small>${esc(it.sub)}</small>`:''}</span></div>`).join('')+'</div>';
+}
+function renderDashboard(){
+  if(role!=='admin')return;
+  const {rr,ss}=dashData(),T=sumK(rr,'total'),A=sumK(rr,'adv'),B=sumK(rr,'bal'),S=sumK(ss,'val'),N=A-S,gName={month:'Month',week:'Week',day:'Day'}[$('groupBy').value];
+  $('kpis').innerHTML=[['No. of patients',rr.length,''],['Total Value',T,''],['Income (Received)',A,''],['Balance',B,''],['Spends',S,'loss'],[N<0?'Net Loss':'Net Profit',Math.abs(N),N<0?'loss':'']].map(x=>`<div class="kpi ${x[2]}"><small>${x[0]}</small><div>${fmt(x[1])}</div></div>`).join('');
+  const G={},gp=k=>G[k]=G[k]||{n:0,t:0,a:0,b:0,s:0};
+  rr.forEach(r=>{const x=gp(periodKey(r.date));x.n++;x.t+=num(r.total);x.a+=num(r.adv);x.b+=num(r.bal)});
+  ss.forEach(s=>{gp(periodKey(s.date)).s+=num(s.val)});
+  const keys=Object.keys(G).sort();
+  $('plTitle').textContent=`Profit / Loss by ${gName} (Income = Received)`;
+  vChart('plChart',keys,[{name:'Received (Income)',color:'#3fa34d',values:keys.map(k=>G[k].a)},{name:'Spends',color:'#f0a04b',values:keys.map(k=>G[k].s)},{name:v=>v<0?'Loss':'Profit',color:v=>v<0?'#d64545':'#1f6b2c',values:keys.map(k=>G[k].a-G[k].s),legend:[{n:'Profit',c:'#1f6b2c'},{n:'Loss',c:'#d64545'}]}]);
+  $('periodBody').innerHTML=keys.slice().reverse().map(k=>{const v=G[k],pl=v.a-v.s;return `<tr><td>${esc(k)}</td><td class="num">${v.n}</td><td class="num">${fmt(v.t)}</td><td class="num">${fmt(v.a)}</td><td class="num ${v.b>0?'neg':''}">${fmt(v.b)}</td><td class="num">${fmt(v.s)}</td><td class="num ${pl<0?'neg':'pos'}">${fmt(pl)}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">No data</td></tr>';
+  $('periodFoot').innerHTML=keys.length?`<tr><td>Total</td><td class="num">${rr.length}</td><td class="num">${fmt(T)}</td><td class="num">${fmt(A)}</td><td class="num">${fmt(B)}</td><td class="num">${fmt(S)}</td><td class="num ${N<0?'neg':'pos'}">${fmt(N)}</td></tr>`:'';
+  const cm={};ss.forEach(s=>{const c=s.cls||'(Unclassified)';cm[c]=cm[c]||{v:0,n:0};cm[c].v+=num(s.val);cm[c].n++});
+  const clsItems=Object.entries(cm).map(([l,o])=>({label:l,value:o.v,sub:`${o.n} item${o.n>1?'s':''} · ${S?(o.v/S*100).toFixed(1):0}%`})).sort((a,b)=>b.value-a.value);
+  const pal=['#d64545','#e8683f','#f0a04b','#e0b84a','#c77dba','#8f7fd6','#5b9bd5','#4fb3a9'];hChart('spClsChart',clsItems,i=>pal[i%pal.length]);
+  const SG={};ss.forEach(s=>{const k=periodKey(s.date);SG[k]=(SG[k]||0)+num(s.val)});const sk=Object.keys(SG).sort();$('spTimeTitle').textContent=`Spends Trend by ${gName}`;vChart('spTimeChart',sk,[{name:'Spends',color:'#d64545',values:sk.map(k=>SG[k])}]);
+  const m=$('refMetric').value,rm={};rr.forEach(r=>{const k=(r.ref||'').trim()||'(Not specified)';rm[k]=rm[k]||{v:0,n:0};rm[k].v+=m==='cnt'?1:num(r[m]);rm[k].n++});
+  const base=m==='cnt'?rr.length:(m==='adv'?A:m==='total'?T:B);
+  const refItems=Object.entries(rm).map(([l,o])=>({label:l,value:o.v,sub:`${m==='cnt'?'':o.n+' entr'+(o.n>1?'ies':'y')+' · '}${base?(o.v/base*100).toFixed(1):0}%`})).sort((a,b)=>b.value-a.value);
+  hChart('refChart',refItems,'linear-gradient(90deg,#3fa34d,#a8d672)',m==='cnt');
+  const coll=T?(A/T*100).toFixed(1):'0.0';
+  $('summary').innerHTML=`<p>Selected No. of patients: <b>${rr.length}</b></p><p>Spend records: <b>${ss.length}</b></p><p>Collection (Received ÷ Total): <b>${coll}%</b></p><p>Outstanding balance: <b class="${B>0?'neg':''}">${fmt(B)}</b></p><p>Top referrer: <b>${refItems[0]?esc(refItems[0].label):'–'}</b></p><p>Top spend classification: <b>${clsItems[0]?esc(clsItems[0].label):'–'}</b></p><p>${N<0?'Net Loss':'Net Profit'}: <b class="${N<0?'neg':'pos'}">${fmt(Math.abs(N))}</b></p><p class="note">Income = Received. Profit / Loss = Received - Spends.</p>`;
+}
 
-function vChart(id,labels,series){const el=$(id);if(!labels.length){el.innerHTML='<div class="empty">No data for the selected filters</div>';return}
+/* ================= ADMIN BUILDER ================= */
+function addField(){
+  const name=$('newFieldName').value.trim();if(!name)return;
+  const labelNorm=normTxt(name);if(allFieldLabels().some(x=>normTxt(x)===labelNorm)){toast('A field with that name already exists',true);return}
+  customFields.push({key:'cf_'+uid(),label:name,type:$('newFieldType').value,role:$('newFieldRole').value,fuzzy:$('newFieldFuzzy').checked,source:'manual'});
+  persist();buildForm();renderBuilder();renderAll();$('newFieldName').value='';
+}
+function allFieldLabels(){return baseFields.concat(customFields).map(f=>f.label)}
+function removeField(k){
+  const f=customFields.find(x=>x.key===k);if(!f)return;
+  if(confirm('Remove this field? Existing values remain stored but hidden.')){customFields=customFields.filter(f=>f.key!==k);persist();buildForm();renderBuilder();renderAll()}
+}
+function editField(k){
+  const f=customFields.find(x=>x.key===k);if(!f)return;
+  const n=prompt('Field name',f.label);if(n===null)return;
+  const name=n.trim();if(!name)return;
+  f.label=name;persist();buildForm();renderBuilder();renderAll();
+}
+function setFieldRole(k,v){const f=customFields.find(x=>x.key===k);if(!f)return;f.role=v;persist();buildForm();renderBuilder();renderAll()}
+function setFieldType(k,v){const f=customFields.find(x=>x.key===k);if(!f)return;f.type=v;persist();buildForm();renderBuilder();renderAll()}
+function toggleFieldFuzzy(k,v){const f=customFields.find(x=>x.key===k);if(!f)return;f.fuzzy=!!v;persist();buildForm();renderBuilder();renderAll()}
+function addTab(){
+  const name=$('newTabName').value.trim(),cols=$('newTabCols').value.split(',').map(x=>x.trim()).filter(Boolean);if(!name||!cols.length)return;
+  const id='tab_'+uid(),fuzzy=$('newTabFuzzy').checked;
+  const columns=cols.map(c=>({key:'c_'+uid(),label:c,type:/date/i.test(c)?'date':/amount|value|price|cost|fee|number/i.test(c)?'number':/paid|active|status|yes|no/i.test(c)?'select':'text',fuzzy}));
+  customTabs.push({id,name,role:$('newTabRole').value,columns,source:'manual'});customData[id]=[];persist();renderBuilder();renderAll();$('newTabName').value='';$('newTabCols').value='';
+}
+function removeTab(id){
+  if(confirm('Remove tab and its stored items?')){customTabs=customTabs.filter(t=>t.id!==id);delete customData[id];persist();renderBuilder();renderAll()}
+}
+function renameTab(id,name){const t=customTabs.find(x=>x.id===id);if(!t)return;name=String(name||'').trim();if(!name)return;t.name=name;persist();renderBuilder();renderAll()}
+function setTabRole(id,v){const t=customTabs.find(x=>x.id===id);if(!t)return;t.role=v;persist();renderBuilder();renderAll()}
+function addTabColumn(id){
+  const t=customTabs.find(x=>x.id===id);if(!t)return;
+  const name=prompt('New column name');if(!name||!name.trim())return;
+  const type=(prompt('Column type: text / number / date / select','text')||'text').toLowerCase();
+  const safeType=['text','number','date','select'].includes(type)?type:'text';
+  t.columns.push({key:'c_'+uid(),label:name.trim(),type:safeType,fuzzy:safeType==='text'||safeType==='select'});
+  persist();renderBuilder();renderAll();if(currentStore===id)renderStore();
+}
+function renameTabColumn(tid,cid){
+  const t=customTabs.find(x=>x.id===tid),c=t?.columns.find(x=>x.key===cid);if(!c)return;
+  const n=prompt('Column name',c.label);if(n===null)return;if(!n.trim())return;c.label=n.trim();persist();renderBuilder();renderAll();if(currentStore===tid)renderStore();
+}
+function setTabColumnType(tid,cid,v){
+  const t=customTabs.find(x=>x.id===tid),c=t?.columns.find(x=>x.key===cid);if(!c)return;c.type=v;c.fuzzy=(v==='text'||v==='select');persist();renderBuilder();renderAll();if(currentStore===tid)renderStore();
+}
+function toggleTabColumnFuzzy(tid,cid,v){
+  const t=customTabs.find(x=>x.id===tid),c=t?.columns.find(x=>x.key===cid);if(!c)return;c.fuzzy=!!v;persist();renderBuilder();if(currentStore===tid)renderStore();
+}
+function removeTabColumn(tid,cid){
+  const t=customTabs.find(x=>x.id===tid);if(!t)return;if(t.columns.length<=1){toast('A storage tab needs at least one column',true);return}
+  if(confirm('Remove this column? Existing values in that column will remain in raw storage but will no longer display.')){t.columns=t.columns.filter(c=>c.key!==cid);persist();renderBuilder();renderAll();if(currentStore===tid)renderStore()}
+}
+function openBuilder(){renderBuilder();$('builderModal').classList.remove('hidden')}
+function renderBuilder(){
+  $('fieldList').innerHTML=customFields.map(f=>`
+    <div class="inline-edit">
+      <input value="${esc(f.label)}" onchange="renameFieldInline('${f.key}',this.value)" title="Field name">
+      <select onchange="setFieldType('${f.key}',this.value)">${['text','number','date','select'].map(t=>`<option ${f.type===t?'selected':''}>${t}</option>`).join('')}</select>
+      <select onchange="setFieldRole('${f.key}',this.value)"><option value="both" ${f.role==='both'?'selected':''}>Both</option><option value="emp" ${f.role==='emp'?'selected':''}>EMP only</option><option value="admin" ${f.role==='admin'?'selected':''}>Admin only</option></select>
+      <div class="pill-row"><label class="fuzzy-line"><input type="checkbox" ${f.fuzzy!==false?'checked':''} onchange="toggleFieldFuzzy('${f.key}',this.checked)"> Fuzzy</label><span class="badge ${f.source==='excel'?'import-badge':''}">${f.source==='excel'?'Imported':''}</span><button class="btn sm danger" onclick="removeField('${f.key}')">Remove</button></div>
+    </div>`).join('')||'<p class="note">No custom fields yet.</p>';
+  $('tabList').innerHTML=customTabs.map(t=>`
+    <div class="tab-editor">
+      <div class="toolbar">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:1">
+          <input style="min-width:180px;max-width:320px" value="${esc(t.name)}" onchange="renameTab('${t.id}',this.value)">
+          <select onchange="setTabRole('${t.id}',this.value)">
+            <option value="both" ${t.role==='both'?'selected':''}>Both</option><option value="emp" ${t.role==='emp'?'selected':''}>EMP only</option><option value="admin" ${t.role==='admin'?'selected':''}>Admin only</option>
+          </select>
+          <span class="badge ${t.source==='excel'?'import-badge':''}">${t.source==='excel'?'Imported sheet':'Manual tab'}</span>
+        </div>
+        <div class="pill-row"><button class="btn sm light" onclick="addTabColumn('${t.id}')">Add Column</button><button class="btn sm danger" onclick="removeTab('${t.id}')">Remove Tab</button></div>
+      </div>
+      ${t.columns.map(c=>`<div class="col-editor">
+        <input value="${esc(c.label)}" onchange="renameTabColumn('${t.id}','${c.key}')">
+        <select onchange="setTabColumnType('${t.id}','${c.key}',this.value)">${['text','number','date','select'].map(tp=>`<option value="${tp}" ${c.type===tp?'selected':''}>${tp}</option>`).join('')}</select>
+        <div class="pill-row"><label class="fuzzy-line"><input type="checkbox" ${c.fuzzy!==false&&['text','select'].includes(c.type)?'checked':''} ${['text','select'].includes(c.type)?'':'disabled'} onchange="toggleTabColumnFuzzy('${t.id}','${c.key}',this.checked)"> Fuzzy</label><button class="btn sm danger" onclick="removeTabColumn('${t.id}','${c.key}')">Delete column</button></div>
+      </div>`).join('')}
+    </div>`).join('')||'<p class="note">No custom storage tabs yet.</p>';
+}
+function renameFieldInline(k,n){const f=customFields.find(x=>x.key===k);if(!f)return;n=String(n||'').trim();if(!n)return;f.label=n;persist();buildForm();renderBuilder();renderAll()}
 
-const legend='<div class="legend">'+series.flatMap(s=>s.legend||[{n:s.name,c:s.color}]).map(l=>`<span><i style="background:${l.c}"></i>${esc(l.n)}</span>`).join('')+'</div>';
+/* ================= STORAGE ================= */
+function visibleTab(t){return role==='admin'||!t.role||t.role==='both'||t.role===role}
+function renderCustomTabs(){$('customTabs').innerHTML=customTabs.filter(visibleTab).map(t=>`<button class="btn tab light" onclick="openStore('${t.id}')">${esc(t.name)}</button>`).join('')}
+function storeDef(){if(currentStore==='spends')return{id:'spends',name:'Spends',columns:[{key:'date',label:'Date',type:'date',fuzzy:false},{key:'cls',label:'Classification',type:'text',fuzzy:true},{key:'desc',label:'Description',type:'text',fuzzy:true},{key:'val',label:'Value',type:'number',fuzzy:false}]};return customTabs.find(t=>t.id===currentStore)}
+function storeArray(){if(currentStore==='spends')return spends;return customData[currentStore]||(customData[currentStore]=[])}
+function storeDateColumn(d){return d.columns.find(c=>c.type==='date')}
+function storeTextColumns(d){return d.columns.filter(c=>['text','select'].includes(c.type))}
+function storeNumberColumns(d){return d.columns.filter(c=>c.type==='number')}
+function clearStoreFilters(){storeFilters={};renderStoreFilters();renderStoreBody()}
+function getStoreFilterVal(k){return String(storeFilters[k]??'').trim()}
+function storeMatches(row,d){
+  const q=getStoreFilterVal('__q').toLowerCase(),dateCol=storeDateColumn(d);
+  if(q&&!d.columns.some(c=>normTxt(row[c.key]).includes(normTxt(q))))return false;
+  if(dateCol){
+    const fr=getStoreFilterVal('__from'),to=getStoreFilterVal('__to'),v=toDate(row[dateCol.key]);
+    if(fr&&v<fr)return false;if(to&&v>to)return false;
+  }
+  for(const c of storeTextColumns(d)){
+    const qv=getStoreFilterVal(c.key);if(qv&&fuzzyScore(qv,row[c.key])<45)return false;
+  }
+  for(const c of storeNumberColumns(d)){
+    const min=getStoreFilterVal(c.key+'__min'),max=getStoreFilterVal(c.key+'__max');
+    if(min!==''&&num(row[c.key])<num(min))return false;if(max!==''&&num(row[c.key])>num(max))return false;
+  }
+  return true;
+}
+function filteredStoreRows(){const d=storeDef(),a=storeArray();if(!d)return[];return a.filter(x=>storeMatches(x,d))}
+function openStore(id){
+  if(id!=='spends'){
+    const t=customTabs.find(x=>x.id===id);if(!t||!visibleTab(t))return;
+  }
+  currentStore=id;editingStore='';storeFilters={};const d=storeDef();$('storeTitle').textContent=d?.name||'Storage';$('storeModal').classList.remove('hidden');renderStore();
+}
+function renderStore(){
+  const d=storeDef();if(!d)return;
+  renderStoreFilters();
+  $('storeForm').innerHTML=d.columns.map(c=>{
+    const fuzzy=fuzzyEnabled(c);
+    return `<div class="fg"><label>${esc(c.label)}</label><div class="${fuzzy?'store-ac-wrap':''}"><input id="st_${esc(c.key)}" type="${c.type==='select'?'text':c.type}" ${c.type==='number'?'step="any"':''} ${fuzzy?'autocomplete="off"':''}></div>${fuzzy?'<div class="small-muted">Fuzzy suggestions from existing values</div>':''}</div>`;
+  }).join('');
+  d.columns.filter(c=>fuzzyEnabled(c)).forEach(c=>attachFuzzyInput($('st_'+c.key),()=>storeArray().map(x=>x[c.key]),'st_ac_'+c.key));
+  $('storeHead').innerHTML=d.columns.map(c=>`<th class="${c.type==='number'?'num':''}">${esc(c.label)}</th>`).join('')+'<th>Action</th>';
+  renderStoreBody();
+}
+function renderStoreFilters(){
+  const d=storeDef();if(!d||!$('storeFilterForm'))return;
+  const dc=storeDateColumn(d);
+  let h=`<div class="fg"><label>Search all columns</label><input id="sf___q" value="${esc(storeFilters.__q||'')}" oninput="updateStoreFilter('__q',this.value)"></div>`;
+  if(dc)h+=`<div class="fg"><label>From date</label><input type="date" value="${esc(storeFilters.__from||'')}" onchange="updateStoreFilter('__from',this.value)"></div><div class="fg"><label>To date</label><input type="date" value="${esc(storeFilters.__to||'')}" onchange="updateStoreFilter('__to',this.value)"></div>`;
+  storeTextColumns(d).forEach(c=>h+=`<div class="fg"><label>${esc(c.label)}</label><div class="store-ac-wrap"><input id="sf_${c.key}" value="${esc(storeFilters[c.key]||'')}" autocomplete="off" oninput="updateStoreFilter('${c.key}',this.value)"></div></div>`);
+  if(currentStore!=='spends')storeNumberColumns(d).filter(c=>!['check number','check amount','price','value'].includes(normTxt(c.label))).forEach(c=>h+=`<div class="fg"><label>Min ${esc(c.label)}</label><input type="number" step="any" value="${esc(storeFilters[c.key+'__min']||'')}" oninput="updateStoreFilter('${c.key}__min',this.value)"><label style="margin-top:5px">Max ${esc(c.label)}</label><input type="number" step="any" value="${esc(storeFilters[c.key+'__max']||'')}" oninput="updateStoreFilter('${c.key}__max',this.value)"></div>`);
+  $('storeFilterForm').innerHTML=h;
+  storeTextColumns(d).forEach(c=>{const inp=$('sf_'+c.key);if(inp)attachFuzzyInput(inp,()=>storeArray().map(x=>x[c.key]),'sf_ac_'+c.key, v=>{updateStoreFilter(c.key,v)})});
+}
+function updateStoreFilter(k,v){storeFilters[k]=v;clearTimeout(storeFilterTimer);storeFilterTimer=setTimeout(()=>renderStoreBody(),60)}
+function renderStoreBody(){
+  const d=storeDef();if(!d)return;const a=filteredStoreRows();
+  $('storeBody').innerHTML=a.length?a.map(x=>`<tr>${d.columns.map(c=>`<td class="${c.type==='number'?'num':''}">${c.type==='number'?fmt(x[c.key]):c.type==='date'?esc(fmtDate(x[c.key])||'–'):esc(x[c.key]||'–')}</td>`).join('')}<td><button class="btn sm light" onclick="editStoreItem('${x.uid}')">Edit</button> <button class="btn sm danger" onclick="deleteStoreItem('${x.uid}')">Delete</button></td></tr>`).join(''):'<tr><td colspan="30" class="empty">No matching data</td></tr>';
+}
+function saveStoreItem(){
+  const d=storeDef(),a=storeArray(),x={uid:editingStore||uid()};d.columns.forEach(c=>{const e=$('st_'+c.key);x[c.key]=c.type==='number'?num(e?.value):String(e?.value??'').trim()});
+  if(currentStore==='spends'){x.date=toDate(x.date);x.cls=x.cls||'';x.desc=x.desc||''}
+  if(editingStore){const i=a.findIndex(z=>z.uid===editingStore);if(i>=0)a[i]=x}else a.push(x);
+  persist();editingStore='';renderStore();renderAll();toast('Saved');
+}
+function editStoreItem(u){
+  const d=storeDef(),x=storeArray().find(z=>z.uid===u);if(!x)return;editingStore=u;
+  d.columns.forEach(c=>{const e=$('st_'+c.key);if(e)e.value=x[c.key]??''});
+}
+function deleteStoreItem(u){
+  const a=storeArray(),i=a.findIndex(x=>x.uid===u);if(i>=0&&confirm('Delete item?')){a.splice(i,1);persist();renderStore();renderAll()}
+}
+function resetStoreForm(){editingStore='';const d=storeDef();if(!d)return;d.columns.forEach(c=>{if($('st_'+c.key))$('st_'+c.key).value=c.type==='date'?isoToday():''})}
+function renderAdminTabs(){
+  if(role!=='admin')return;
+  $('tabCount').textContent=customTabs.length;
+  if(!customTabs.length){$('adminTabsData').innerHTML='<p class="note">No custom tabs yet. Imported Excel sheets will appear here automatically.</p>';return}
+  $('adminTabsData').innerHTML=customTabs.map(t=>{
+    const all=customData[t.id]||[],dc=t.columns.find(c=>c.type==='date'),rows=(dc?all.filter(x=>selectedPeriod(x[dc.key])):all.slice());
+    if(dc)rows.sort((a,b)=>toDate(b[dc.key]).localeCompare(toDate(a[dc.key])));
+    const st=[['Items',rows.length]];
+    t.columns.forEach(c=>{if(c.type==='number')st.push(['Total '+c.label,sumK(rows,c.key)]);else if(c.type==='select'){const y=rows.filter(x=>x[c.key]==='Yes').length;st.push([c.label+': Yes',y],[c.label+': No',rows.length-y])}});
+    return `<div class="panel tabdata"><div class="toolbar"><h3>${esc(t.name)} <span class="badge">${rows.length}/${all.length}</span> <span class="note">Visible to: ${esc(t.role)}</span></h3><button class="btn sm light" onclick="openStore('${t.id}')">Open / Edit</button></div><div class="kpis mini">${st.map(s=>`<div class="kpi"><small>${esc(s[0])}</small><div>${fmt(s[1])}</div></div>`).join('')}</div><div class="tbl-wrap" style="max-height:240px"><table><thead><tr><th>#</th>${t.columns.map(c=>`<th class="${c.type==='number'?'num':''}">${esc(c.label)}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.map((x,i)=>`<tr><td>${i+1}</td>${t.columns.map(c=>`<td class="${c.type==='number'?'num':''}">${c.type==='number'?fmt(x[c.key]):c.type==='date'?esc(fmtDate(x[c.key])||'–'):esc(x[c.key]||'–')}</td>`).join('')}</tr>`).join(''):'<tr><td colspan="30" class="empty">No data</td></tr>'}</tbody></table></div></div>`;
+  }).join('');
+}
 
-const vals=series.flatMap(s=>s.values),mx=Math.max(0,...vals),mn=Math.min(0,...vals),rng=(mx-mn)||1,H=280,pt=14,pb=62,pl=62,pr=12,gw=Math.max(46,series.length*20+18),avail=(el.clientWidth||700)-4,W=Math.max(avail,pl+pr+labels.length*gw),gW=(W-pl-pr)/labels.length,plotH=H-pt-pb,y=v=>pt+(mx-v)/rng*plotH,y0=y(0),bw=Math.min(34,(gW-14)/series.length);let g='';
-
-for(let i=0;i<=4;i++){const v=mn+rng*i/4,yy=y(v);g+=`<line x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}" stroke="#e5f4d8"/><text x="${pl-6}" y="${yy+4}" text-anchor="end" font-size="10" fill="#5f7a63">${shortN(v)}</text>`}
-
-labels.forEach((l,i)=>{const cx=pl+i*gW+gW/2,start=cx-bw*series.length/2;series.forEach((s,j)=>{const v=s.values[i]||0,top=Math.min(y(v),y0),h=Math.max(Math.abs(y(v)-y0),v?1:0),c=typeof s.color==='function'?s.color(v):s.color;g+=`<rect x="${start+j*bw+1}" y="${top}" width="${bw-2}" height="${h}" fill="${c}" rx="3"><title>${esc(l)} | ${esc(typeof s.name==='function'?s.name(v):s.name)}: ${fmt(v)}</title></rect>`});g+=`<text x="${cx}" y="${H-pb+14}" font-size="10.5" text-anchor="end" fill="#1f3b24" transform="rotate(-35 ${cx} ${H-pb+14})">${esc(l)}</text>`});
-
-g+=`<line x1="${pl}" x2="${W-pr}" y1="${y0}" y2="${y0}" stroke="#2b7a37" stroke-width="1.2"/>`;
-
-el.innerHTML=legend+`<div class="chart-scroll"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Segoe UI,Arial">${g}</svg></div>`}
-
-function hChart(id,items,color,isCount){const el=$(id);if(!items.length){el.innerHTML='<div class="empty">No data for the selected filters</div>';return}const mx=Math.max(...items.map(i=>i.value),1);el.innerHTML='<div class="hbars">'+items.map((it,i)=>`<div class="hrow" title="${esc(it.label)}: ${fmt(it.value)}"><span class="hl">${i+1}. ${esc(it.label)}</span><div class="htrack"><div class="hbar" style="width:${Math.max(it.value/mx*100,0.6)}%;background:${typeof color==='function'?color(i):color}"></div></div><span class="hv">${isCount?fmt(it.value):'? '+fmt(it.value)}${it.sub?`<small>${esc(it.sub)}</small>`:''}</span></div>`).join('')+'</div>'}
-
-function renderDashboard(){if(role!=='admin')return;const {rr,ss}=dashData(),T=sumK(rr,'total'),A=sumK(rr,'adv'),B=sumK(rr,'bal'),S=sumK(ss,'val'),N=A-S,gName={month:'Month',week:'Week',day:'Day'}[$('groupBy').value];
-
-$('kpis').innerHTML=[['No. of patients',rr.length,''],['Total Value',T,''],['Income (Received)',A,''],['Balance',B,''],['Spends',S,'loss'],[N<0?'Net Loss':'Net Profit',Math.abs(N),N<0?'loss':'']].map(x=>`<div class="kpi ${x[2]}"><small>${x[0]}</small><div>${fmt(x[1])}</div></div>`).join('');
-
-const G={},gp=k=>G[k]=G[k]||{n:0,t:0,a:0,b:0,s:0};rr.forEach(r=>{const x=gp(periodKey(r.date));x.n++;x.t+=num(r.total);x.a+=num(r.adv);x.b+=num(r.bal)});ss.forEach(s=>{gp(periodKey(s.date)).s+=num(s.val)});const keys=Object.keys(G).sort();
-
-$('plTitle').textContent=`?? Profit / Loss by ${gName} (Income = Received)`;
-
-vChart('plChart',keys,[{name:'Received (Income)',color:'#3fa34d',values:keys.map(k=>G[k].a)},{name:'Spends',color:'#f0a04b',values:keys.map(k=>G[k].s)},{name:v=>v<0?'Loss':'Profit',color:v=>v<0?'#d64545':'#1f6b2c',values:keys.map(k=>G[k].a-G[k].s),legend:[{n:'Profit',c:'#1f6b2c'},{n:'Loss',c:'#d64545'}]}]);
-
-$('periodBody').innerHTML=keys.slice().reverse().map(k=>{const v=G[k],pl=v.a-v.s;return `<tr><td>${esc(k)}</td><td class="num">${v.n}</td><td class="num">${fmt(v.t)}</td><td class="num">${fmt(v.a)}</td><td class="num ${v.b>0?'neg':''}">${fmt(v.b)}</td><td class="num">${fmt(v.s)}</td><td class="num ${pl<0?'neg':'pos'}">${fmt(pl)}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">No data</td></tr>';
-
-$('periodFoot').innerHTML=keys.length?`<tr><td>Total</td><td class="num">${rr.length}</td><td class="num">${fmt(T)}</td><td class="num">${fmt(A)}</td><td class="num">${fmt(B)}</td><td class="num">${fmt(S)}</td><td class="num ${N<0?'neg':'pos'}">${fmt(N)}</td></tr>`:'';
-
-const cm={};ss.forEach(s=>{const c=s.cls||'(Unclassified)';cm[c]=cm[c]||{v:0,n:0};cm[c].v+=num(s.val);cm[c].n++});const clsItems=Object.entries(cm).map(([l,o])=>({label:l,value:o.v,sub:`${o.n} item${o.n>1?'s':''} · ${S?(o.v/S*100).toFixed(1):0}%`})).sort((a,b)=>b.value-a.value);
-
-const pal=['#d64545','#e8683f','#f0a04b','#e0b84a','#c77dba','#8f7fd6','#5b9bd5','#4fb3a9'];hChart('spClsChart',clsItems,i=>pal[i%pal.length]);
-
-const SG={};ss.forEach(s=>{const k=periodKey(s.date);SG[k]=(SG[k]||0)+num(s.val)});const sk=Object.keys(SG).sort();$('spTimeTitle').textContent=`?? Spends Trend by ${gName}`;vChart('spTimeChart',sk,[{name:'Spends',color:'#d64545',values:sk.map(k=>SG[k])}]);
-
-const m=$('refMetric').value,rm={};rr.forEach(r=>{const k=(r.ref||'').trim()||'(Not specified)';rm[k]=rm[k]||{v:0,n:0};rm[k].v+=m==='cnt'?1:num(r[m]);rm[k].n++});const base=m==='cnt'?rr.length:(m==='adv'?A:m==='total'?T:B);const refItems=Object.entries(rm).map(([l,o])=>({label:l,value:o.v,sub:`${m==='cnt'?'':o.n+' entr'+(o.n>1?'ies':'y')+' · '}${base?(o.v/base*100).toFixed(1):0}%`})).sort((a,b)=>b.value-a.value);hChart('refChart',refItems,'linear-gradient(90deg,#3fa34d,#a8d672)',m==='cnt');
-
-const coll=T?(A/T*100).toFixed(1):'0.0';$('summary').innerHTML=`<p>Selected No. of patients: <b>${rr.length}</b></p><p>Spend records: <b>${ss.length}</b></p><p>Collection (Received ÷ Total): <b>${coll}%</b></p><p>Outstanding balance: <b class="${B>0?'neg':''}">${fmt(B)}</b></p><p>Top referrer: <b>${refItems[0]?esc(refItems[0].label):'–'}</b></p><p>Top spend classification: <b>${clsItems[0]?esc(clsItems[0].label):'–'}</b></p><p>${N<0?'Net Loss':'Net Profit'}: <b class="${N<0?'neg':'pos'}">${fmt(Math.abs(N))}</b></p><p class="note">Income = Received received (not Total Value). Profit / Loss = Received - Spends. "Referred by" filter applies to No. of patients; "Spend classification" filter applies to spends; Period filter applies to both.</p>`}
-
-function renderAdminTabs(){if(role!=='admin')return;$('tabCount').textContent=customTabs.length;if(!customTabs.length){$('adminTabsData').innerHTML='<p class="note">No custom tabs yet. Tabs added via "Manage Fields/Tabs" will appear here automatically.</p>';return}
-
-$('adminTabsData').innerHTML=customTabs.map(t=>{const all=customData[t.id]||[],dc=t.columns.find(c=>c.type==='date'),rows=(dc?all.filter(x=>selectedPeriod(x[dc.key])):all.slice());if(dc)rows.sort((a,b)=>toDate(b[dc.key]).localeCompare(toDate(a[dc.key])));const st=[['Items',rows.length]];t.columns.forEach(c=>{if(c.type==='number')st.push(['Total '+c.label,sumK(rows,c.key)]);else if(c.type==='select'){const y=rows.filter(x=>x[c.key]==='Yes').length;st.push([c.label+': Yes',y],[c.label+': No',rows.length-y])}});
-
-return `<div class="panel tabdata"><div class="toolbar"><h3>${esc(t.name)} <span class="badge">${rows.length}/${all.length}</span> <span class="note">Visible to: ${esc(t.role)}</span></h3><button class="btn sm light" onclick="openStore('${t.id}')">Open / Edit</button></div><div class="kpis mini">${st.map(s=>`<div class="kpi"><small>${esc(s[0])}</small><div>${fmt(s[1])}</div></div>`).join('')}</div><div class="tbl-wrap" style="max-height:240px"><table><thead><tr><th>#</th>${t.columns.map(c=>`<th class="${c.type==='number'?'num':''}">${esc(c.label)}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.map((x,i)=>`<tr><td>${i+1}</td>${t.columns.map(c=>`<td class="${c.type==='number'?'num':''}">${c.type==='number'?fmt(x[c.key]):esc(x[c.key]||'–')}</td>`).join('')}</tr>`).join(''):'<tr><td colspan="30" class="empty">No data</td></tr>'}</tbody></table></div></div>`}).join('')}
-
- 
-
-function addField(){const name=$('newFieldName').value.trim();if(!name)return;customFields.push({key:'cf_'+uid(),label:name,type:$('newFieldType').value,role:$('newFieldRole').value});persist();buildForm();renderBuilder();renderAll();$('newFieldName').value=''}function removeField(k){if(confirm('Remove this field? Existing values remain stored but hidden.')){customFields=customFields.filter(f=>f.key!==k);persist();buildForm();renderBuilder();renderAll()}}function editField(k){const f=customFields.find(x=>x.key===k),n=prompt('Field name',f.label);if(n){f.label=n.trim();persist();buildForm();renderBuilder();renderAll()}}function addTab(){const name=$('newTabName').value.trim(),cols=$('newTabCols').value.split(',').map(x=>x.trim()).filter(Boolean);if(!name||!cols.length)return;const id='tab_'+uid();customTabs.push({id,name,role:$('newTabRole').value,columns:cols.map(c=>({key:'c_'+uid(),label:c,type:/date/i.test(c)?'date':/amount|value/i.test(c)?'number':/paid/i.test(c)?'select':'text'}))});customData[id]=[];persist();renderBuilder();renderAll();$('newTabName').value='';$('newTabCols').value=''}function removeTab(id){if(confirm('Remove tab and its stored items?')){customTabs=customTabs.filter(t=>t.id!==id);delete customData[id];persist();renderBuilder();renderAll()}}function openBuilder(){renderBuilder();$('builderModal').classList.remove('hidden')}function renderBuilder(){$('fieldList').innerHTML=customFields.map(f=>`<div class="toolbar"><span>${esc(f.label)} (${f.type}, ${f.role})</span><span><button class="btn sm light" onclick="editField('${f.key}')">Edit</button> <button class="btn sm danger" onclick="removeField('${f.key}')">Remove</button></span></div>`).join('')||'<p class="note">No custom fields.</p>';$('tabList').innerHTML=customTabs.map(t=>`<div class="toolbar"><span>${esc(t.name)}: ${t.columns.map(c=>esc(c.label)).join(', ')} (${t.role})</span><button class="btn sm danger" onclick="removeTab('${t.id}')">Remove</button></div>`).join('')||'<p class="note">No custom tabs.</p>'}
-
-function renderCustomTabs(){$('customTabs').innerHTML=customTabs.filter(visible).map(t=>`<button class="btn tab light" onclick="openStore('${t.id}')">${esc(t.name)}</button>`).join('')}function storeDef(){if(currentStore==='spends')return{id:'spends',name:'Spends',columns:[{key:'date',label:'Date',type:'date'},{key:'cls',label:'Classification',type:'text'},{key:'desc',label:'Description',type:'text'},{key:'val',label:'Value',type:'number'}]};return customTabs.find(t=>t.id===currentStore)}function storeArray(){return currentStore==='spends'?spends:(customData[currentStore]||(customData[currentStore]=[]))}function openStore(id){currentStore=id;editingStore='';const d=storeDef();$('storeTitle').textContent=d.name;$('storeModal').classList.remove('hidden');renderStore()}function renderStore(){const d=storeDef(),a=storeArray();$('storeForm').innerHTML=d.columns.map(c=>`<div class="fg"><label>${esc(c.label)}</label>${c.type==='select'?`<select id="st_${c.key}"><option value="No">No</option><option value="Yes">Yes</option></select>`:`<input id="st_${c.key}" type="${c.type}" ${c.type==='number'?'step="any"':''}>`}</div>`).join('');$('storeHead').innerHTML=d.columns.map(c=>`<th>${esc(c.label)}</th>`).join('')+'<th>Action</th>';$('storeBody').innerHTML=a.length?a.map(x=>`<tr>${d.columns.map(c=>`<td>${c.type==='number'?fmt(x[c.key]):esc(x[c.key]||'–')}</td>`).join('')}<td><button class="btn sm light" onclick="editStoreItem('${x.uid}')">Edit</button> <button class="btn sm danger" onclick="deleteStoreItem('${x.uid}')">Delete</button></td></tr>`).join(''):'<tr><td colspan="20" class="empty">No data</td></tr>'}function saveStoreItem(){const d=storeDef(),a=storeArray(),x={uid:editingStore||uid()};d.columns.forEach(c=>x[c.key]=c.type==='number'?num($('st_'+c.key).value):$('st_'+c.key).value);if(editingStore){const i=a.findIndex(z=>z.uid===editingStore);a[i]=x}else a.push(x);persist();editingStore='';renderStore();renderAll();toast('Saved')}function editStoreItem(u){const d=storeDef(),x=storeArray().find(z=>z.uid===u);editingStore=u;d.columns.forEach(c=>$('st_'+c.key).value=x[c.key]??'')}function deleteStoreItem(u){const a=storeArray(),i=a.findIndex(x=>x.uid===u);if(i>=0&&confirm('Delete item?')){a.splice(i,1);persist();renderStore();renderAll()}}function resetStoreForm(){editingStore='';renderStore()}
-
-function xmlEsc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}function sheet(name,heads,rows){const cell=v=>`<Cell><Data ss:Type="${typeof v==='number'?'Number':'String'}">${xmlEsc(v)}</Data></Cell>`;return `<Worksheet ss:Name="${xmlEsc(name.slice(0,31))}"><Table><Row>${heads.map(h=>`<Cell><Data ss:Type="String">${xmlEsc(h)}</Data></Cell>`).join('')}</Row>${rows.map(r=>`<Row>${r.map(cell).join('')}</Row>`).join('')}</Table></Worksheet>`}function exportExcel(){const fs=baseFields.concat(customFields),sheets=[sheet('No. of patients',fs.map(f=>f.label).concat('Balance'),records.map(r=>fs.map(f=>r[f.key]??'').concat(num(r.bal)))),sheet('Spends',['Date','Classification','Description','Value'],spends.map(s=>[s.date,s.cls,s.desc,num(s.val)]))];customTabs.forEach(t=>sheets.push(sheet(t.name,t.columns.map(c=>c.label),(customData[t.id]||[]).map(x=>t.columns.map(c=>x[c.key]??'')))));const xml=`<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheets.join('')}</Workbook>`;download(new Blob([xml],{type:'application/vnd.ms-excel'}),'Krishna_Lab_All_Data.xls')}
-
-function importExcel(inp){const f=inp.files[0];if(!f)return;if(f.name.toLowerCase().endsWith('.xlsx')){toast('Please save the file as Excel 2003 XML (.xls) before importing.',true);inp.value='';return}const rd=new FileReader();rd.onload=()=>{try{const doc=new DOMParser().parseFromString(rd.result,'text/xml'),ws=[...doc.getElementsByTagName('Worksheet')];let added=0;ws.forEach(w=>{const name=w.getAttribute('ss:Name')||w.getAttribute('Name'),rows=[...w.getElementsByTagName('Row')].map(r=>[...r.getElementsByTagName('Data')].map(d=>d.textContent));if(rows.length<2)return;const heads=rows[0],data=rows.slice(1);if(name==='No. of patients'){const fs=baseFields.concat(customFields);data.forEach(v=>{const x={uid:uid(),createdAt:Date.now()};fs.forEach(f=>x[f.key]=f.type==='number'?num(v[heads.indexOf(f.label)]):v[heads.indexOf(f.label)]||'');x.bal=num(x.total)-num(x.adv);records.push(x);added++})}else if(name==='Spends'){data.forEach(v=>{spends.push({uid:uid(),date:v[0]||'',cls:v[1]||'',desc:v[2]||'',val:num(v[3])});added++})}else{const t=customTabs.find(x=>x.name===name);if(t)data.forEach(v=>{const x={uid:uid()};t.columns.forEach(c=>x[c.key]=c.type==='number'?num(v[heads.indexOf(c.label)]):v[heads.indexOf(c.label)]||'');(customData[t.id]||(customData[t.id]=[])).push(x);added++})}});persist();renderAll();toast(added+' rows imported')}catch(e){toast('Import failed. Use the exported .xls format.',true)}inp.value=''};rd.readAsText(f)}
-
-function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}function downloadSnapshot(){const clone=document.documentElement.cloneNode(true),seedEl=clone.querySelector('#seed-data');seedEl.textContent=JSON.stringify({records,spends,customFields,customTabs,customData}).replace(/</g,'\\u003c');const ac=clone.querySelector('#refAC');if(ac)ac.remove();const out='<!DOCTYPE html>\n'+clone.outerHTML;download(new Blob([out],{type:'text/html'}),'Krishna_Lab_Data_Snapshot.html');toast('Updated standalone HTML downloaded')}
-
-/* ===== Entered By lock (per login session) ===== */
-
-function applyByLock(){const e=$('fld_by');if(!e)return;const v=sessionStorage.getItem('kpl_by');if(v){e.readOnly=true;e.title='Locked for this login. Logout to change.';if(!editingUid)e.value=v}else{e.readOnly=false;e.title=''}}
-
-/* ===== Referred By fuzzy suggestions ===== */
-
-const normTxt=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-
-function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
-
-function fuzzyScore(q,t){q=normTxt(q);t=normTxt(t);if(!q)return 1;if(t===q)return 100;if(t.startsWith(q))return 90;const ws=t.split(' ');if(ws.some(w=>w.startsWith(q)))return 80;if(t.includes(q))return 70;let i=0;for(const ch of t)if(ch===q[i])i++;const sub=i===q.length&&q.length>1?50:0;let best=0;ws.concat(t).forEach(w=>[w,w.slice(0,q.length)].forEach(x=>{const sim=1-lev(q,x)/Math.max(q.length,x.length);if(sim>best)best=sim}));return Math.max(sub,best>=0.6?best*60:0)}
-
+/* ================= FUZZY INPUTS ================= */
+function lev(a,b){
+  const m=a.length,n=b.length;if(!m)return n;if(!n)return m;
+  let p=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n];
+}
+function fuzzyScore(q,t){
+  q=normTxt(q);t=normTxt(t);if(!q)return 1;if(!t)return 0;if(t===q)return 100;if(t.startsWith(q))return 90;
+  const ws=t.split(' ');if(ws.some(w=>w.startsWith(q)))return 80;if(t.includes(q))return 70;
+  let i=0;for(const ch of t)if(ch===q[i])i++;const sub=i===q.length&&q.length>1?50:0;
+  let best=0;ws.concat(t).forEach(w=>{const sim=1-lev(q,w)/Math.max(q.length,w.length);if(sim>best)best=sim});
+  return Math.max(sub,best>=0.6?best*60:0);
+}
+function attachFuzzyInput(inp,valuesFn,boxId,onPick){
+  if(!inp)return;
+  inp.setAttribute('autocomplete','off');
+  let box=document.getElementById(boxId);
+  if(!box){box=document.createElement('div');box.className='store-ac-list hidden';box.id=boxId;inp.parentNode.appendChild(box)}
+  let idx=-1;
+  const refresh=()=>{
+    const q=inp.value.trim(),vals=[...new Set((valuesFn()||[]).filter(v=>String(v??'').trim()).map(v=>String(v).trim()))];
+    idx=-1;
+    const list=vals.map(v=>({v,s:fuzzyScore(q,v)})).filter(x=>!q||x.s>=35).sort((a,b)=>b.s-a.s||a.v.localeCompare(b.v)).slice(0,8);
+    let h=list.map(o=>`<div class="store-ac-item" data-v="${esc(o.v)}"><span>${esc(o.v)}</span></div>`).join('');
+    if(q&&!list.some(o=>normTxt(o.v)===normTxt(q)))h+=`<div class="store-ac-item" data-v="${esc(q)}"><span>Add "${esc(q)}"</span></div>`;
+    if(!h){box.classList.add('hidden');return}
+    box.innerHTML=h;box.classList.remove('hidden');
+    box.querySelectorAll('.store-ac-item').forEach(el=>el.addEventListener('mousedown',e=>{e.preventDefault();const v=el.dataset.v;inp.value=v;if(onPick)onPick(v);box.classList.add('hidden')}));
+  };
+  inp.oninput=()=>{refresh();if(onPick)onPick(inp.value)};
+  inp.onfocus=refresh;
+  inp.onblur=()=>setTimeout(()=>box.classList.add('hidden'),160);
+  inp.onkeydown=e=>{
+    const items=[...box.querySelectorAll('.store-ac-item')];if(box.classList.contains('hidden')||!items.length)return;
+    if(e.key==='ArrowDown'){idx=(idx+1)%items.length;e.preventDefault()}else if(e.key==='ArrowUp'){idx=(idx-1+items.length)%items.length;e.preventDefault()}else if(e.key==='Enter'&&idx>=0){inp.value=items[idx].dataset.v;if(onPick)onPick(inp.value);box.classList.add('hidden');e.preventDefault();return}else if(e.key==='Escape'){box.classList.add('hidden');return}else return;
+    items.forEach((x,i)=>x.classList.toggle('on',i===idx));items[idx]?.scrollIntoView({block:'nearest'});
+  };
+}
 function refOptions(){const m={};records.forEach(r=>{const v=String(r.ref||'').trim();if(!v)return;const k=normTxt(v);m[k]=m[k]||{c:{},n:0};m[k].n++;m[k].c[v]=(m[k].c[v]||0)+1});return Object.values(m).map(o=>({label:Object.entries(o.c).sort((a,b)=>b[1]-a[1])[0][0],n:o.n}))}
 
-let acIdx=-1;
+/* ================= EXCEL IMPORT / EXPORT ================= */
+function inferType(label,values=[]){
+  const l=normTxt(label);const nonBlank=values.map(v=>String(v??'').trim()).filter(Boolean);
+  if(/date|dob|day/.test(l)&&nonBlank.length)return 'date';
+  if(/amount|value|price|cost|fee|count|number|qty|quantity|total|received|balance|spend/.test(l)&&nonBlank.every(v=>!isNaN(Number(v))))return 'number';
+  if(/paid|active|yes|no|status/.test(l))return 'select';
+  return 'text';
+}
+function headerIndexMap(heads){const m={};heads.forEach((h,i)=>{const k=normTxt(h);if(k&&!Object.prototype.hasOwnProperty.call(m,k))m[k]=i});return m}
+function findCustomField(label){const n=normTxt(label);return customFields.find(f=>normTxt(f.label)===n)}
+function ensureCustomField(label,values=[]){
+  const existing=findCustomField(label);if(existing)return existing;
+  const f={key:'cf_'+uid(),label:String(label).trim(),type:inferType(label,values),role:'both',fuzzy:['text','select'].includes(inferType(label,values)),source:'excel'};
+  customFields.push(f);return f;
+}
+function ensureCustomTab(name,heads,rows){
+  let t=customTabs.find(x=>normTxt(x.name)===normTxt(name));
+  if(!t){
+    t={id:'tab_'+uid(),name:String(name).trim().slice(0,31),role:'both',columns:[],source:'excel'};customTabs.push(t);customData[t.id]=[];
+  }
+  const existingByNorm={};t.columns.forEach(c=>{existingByNorm[normTxt(c.label)]=c});
+  heads.forEach((h,idx)=>{
+    const label=String(h??'').trim()||`Column ${idx+1}`;const values=rows.map(r=>r[idx]);const n=normTxt(label);
+    if(!existingByNorm[n]){const tp=inferType(label,values);const c={key:'c_'+uid(),label,type:tp,fuzzy:['text','select'].includes(tp),source:'excel'};t.columns.push(c);existingByNorm[n]=c}
+  });
+  return t;
+}
+function importRowsFromArrays(sheetName,rows){
+  if(!rows||rows.length<1)return 0;
+  const heads=rows[0].map((h,i)=>String(h??'').trim()||`Column ${i+1}`),data=rows.slice(1).filter(r=>r.some(v=>String(v??'').trim()!==''));
+  if(!data.length)return 0;
+  const map=headerIndexMap(heads);let added=0;
+  if(normTxt(sheetName)==='no of patients'){
+    const fieldMap={};
+    heads.forEach((h,i)=>{
+      const hn=normTxt(h);
+      // Balance is a calculated system column, so it must never become a separate custom field.
+      if(hn==='balance')return;
+      let f=baseFields.find(b=>normTxt(b.label)===hn)||findCustomField(h);
+      if(!f)f=ensureCustomField(h,data.map(r=>r[i]));
+      fieldMap[hn]=f;
+    });
+    data.forEach(row=>{
+      const x={uid:uid(),createdAt:Date.now()};
+      customFields.forEach(f=>{if(!Object.prototype.hasOwnProperty.call(x,f.key))x[f.key]=f.type==='number'?0:''});
+      heads.forEach((h,i)=>{
+        const f=fieldMap[normTxt(h)],v=row[i]??'';
+        if(f)x[f.key]=f.type==='number'?num(v):f.type==='date'?toDate(v):String(v).trim();
+      });
+      if(!x.date)x.date=isoToday();
+      if(x.total===undefined)x.total=0;
+      if(x.adv===undefined)x.adv=0;
+      x.bal=+(num(x.total)-num(x.adv)).toFixed(2);
+      records.push(x);added++;
+    });
+  }else if(normTxt(sheetName)==='spends'){
+    data.forEach(row=>{spends.push({uid:uid(),date:toDate(row[map[normTxt('date')]]??row[0]??''),cls:String(row[map[normTxt('classification')]]??row[1]??'').trim(),desc:String(row[map[normTxt('description')]]??row[2]??'').trim(),val:num(row[map[normTxt('value')]]??row[3]??0)});added++});
+  }else{
+    const t=ensureCustomTab(sheetName,heads,data),byHead={};t.columns.forEach(c=>byHead[normTxt(c.label)]=c);
+    data.forEach(row=>{const x={uid:uid()};t.columns.forEach(c=>{const idx=map[normTxt(c.label)];const v=idx===undefined?'':row[idx]??'';x[c.key]=c.type==='number'?num(v):c.type==='date'?toDate(v):String(v).trim()});customData[t.id]=customData[t.id]||[];customData[t.id].push(x);added++});
+  }
+  return added;
+}
+function parseLegacyExcelXml(text){
+  const doc=new DOMParser().parseFromString(text,'text/xml'),ws=[...doc.getElementsByTagName('Worksheet')];
+  return ws.map(w=>{
+    const name=w.getAttribute('ss:Name')||w.getAttribute('Name')||'Sheet';
+    const rows=[...w.getElementsByTagName('Row')].map(r=>[...r.getElementsByTagName('Data')].map(d=>d.textContent));
+    return {name,rows};
+  });
+}
+async function importExcel(inp){
+  const f=inp.files?.[0];if(!f)return;
+  try{
+    let sheets=[];
+    if(/\.(xlsx|xls)$/i.test(f.name) && window.XLSX){
+      const buf=await f.arrayBuffer(),wb=XLSX.read(buf,{type:'array',cellDates:true});
+      sheets=wb.SheetNames.map(name=>({name,rows:XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,defval:'',raw:false})}));
+    }else{
+      if(!/\.xml$/i.test(f.name) || !f.type.includes('xml') && !/\.xml$/i.test(f.name)){
+        throw new Error('SheetJS Excel engine not loaded');
+      }
+      const text=await f.text();sheets=parseLegacyExcelXml(text);
+    }
+    let added=0,newFields=0,newTabs=0;
+    const beforeF=customFields.length,beforeT=customTabs.length;
+    sheets.forEach(s=>{added+=importRowsFromArrays(s.name,s.rows)});
+    newFields=customFields.length-beforeF;newTabs=customTabs.length-beforeT;
+    persist();buildForm();renderBuilder();renderAll();
+    toast(`${added} rows imported${newFields?`, ${newFields} new field${newFields>1?'s':''}`:''}${newTabs?`, ${newTabs} new storage sheet${newTabs>1?'s':''}`:''}`);
+    if(newFields||newTabs)toast('Excel structure added to Admin Manager');
+  }catch(e){console.error(e);toast('Import failed. Check the header row and Excel format.',true)}
+  inp.value='';
+}
+function xmlEsc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function sheet(name,heads,rows){
+  const cell=v=>`<Cell><Data ss:Type="${typeof v==='number'?'Number':'String'}">${xmlEsc(v)}</Data></Cell>`;
+  return `<Worksheet ss:Name="${xmlEsc(name.slice(0,31))}"><Table><Row>${heads.map(h=>`<Cell><Data ss:Type="String">${xmlEsc(h)}</Data></Cell>`).join('')}</Row>${rows.map(r=>`<Row>${r.map(cell).join('')}</Row>`).join('')}</Table></Worksheet>`;
+}
+function exportExcel(){
+  const fs=baseFields.concat(customFields),sheets=[
+    sheet('No. of patients',fs.map(f=>f.label).concat('Balance'),records.map(r=>fs.map(f=>f.type==='date'?fmtDate(r[f.key]):r[f.key]??'').concat(num(r.bal)))),
+    sheet('Spends',['Date','Classification','Description','Value'],spends.map(s=>[fmtDate(s.date),s.cls,s.desc,num(s.val)]))
+  ];
+  customTabs.forEach(t=>sheets.push(sheet(t.name,t.columns.map(c=>c.label),(customData[t.id]||[]).map(x=>t.columns.map(c=>c.type==='date'?fmtDate(x[c.key]):x[c.key]??'')))));
+  const xml=`<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheets.join('')}</Workbook>`;
+  download(new Blob([xml],{type:'application/vnd.ms-excel'}),'Krishna_Lab_All_Data.xls');
+}
 
-function setupRefAC(){const inp=$('fld_ref');if(!inp)return;inp.setAttribute('autocomplete','off');inp.placeholder='Type to search previous names';const box=document.createElement('div');box.className='ac-list hidden';box.id='refAC';inp.parentNode.appendChild(box);inp.addEventListener('input',showRefAC);inp.addEventListener('focus',showRefAC);inp.addEventListener('blur',()=>setTimeout(()=>box.classList.add('hidden'),150));inp.addEventListener('keydown',e=>{const items=[...box.querySelectorAll('.ac-item')];if(box.classList.contains('hidden')||!items.length)return;if(e.key==='ArrowDown'){acIdx=(acIdx+1)%items.length;e.preventDefault()}else if(e.key==='ArrowUp'){acIdx=(acIdx-1+items.length)%items.length;e.preventDefault()}else if(e.key==='Enter'&&acIdx>=0){e.preventDefault();pickRef(items[acIdx].dataset.v);return}else if(e.key==='Escape'){box.classList.add('hidden');return}else return;items.forEach((x,i)=>x.classList.toggle('on',i===acIdx));items[acIdx].scrollIntoView({block:'nearest'})})}
+/* ================= SNAPSHOT ================= */
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function downloadSnapshot(){
+  const clone=document.documentElement.cloneNode(true);
+  const seedEl=clone.querySelector('#seed-data');
+  if(seedEl)seedEl.textContent=JSON.stringify({records,spends,customFields,customTabs,customData}).replace(/</g,'\\u003c');
+  clone.querySelector('#landing')?.classList.remove('hidden');
+  clone.querySelector('#app')?.classList.add('hidden');
+  clone.querySelector('#pwdModal')?.classList.add('hidden');
+  clone.querySelector('#storeModal')?.classList.add('hidden');
+  clone.querySelector('#builderModal')?.classList.add('hidden');
+  clone.querySelector('#toast')?.classList.remove('show','bad');
+  const scripts=clone.querySelectorAll('script:not([src])');
+  scripts.forEach(s=>{if(s.textContent.includes('const SNAPSHOT_MODE=false;'))s.textContent=s.textContent.replace('const SNAPSHOT_MODE=false;','const SNAPSHOT_MODE=true;')});
+  const out='<!DOCTYPE html>\n'+clone.outerHTML;
+  download(new Blob([out],{type:'text/html'}),'Krishna_Lab_Full_Package.html');
+  toast('Full HTML package downloaded – login page included');
+}
 
-function pickRef(v){$('fld_ref').value=v;$('refAC').classList.add('hidden')}
-
-function showRefAC(){const inp=$('fld_ref'),box=$('refAC');if(!inp||!box)return;const q=inp.value.trim();acIdx=-1;const list=refOptions().map(o=>({...o,s:fuzzyScore(q,o.label)})).filter(o=>o.s>0).sort((a,b)=>b.s-a.s||b.n-a.n).slice(0,8),exact=list.some(o=>normTxt(o.label)===normTxt(q));let h=list.map(o=>`<div class="ac-item" data-v="${esc(o.label)}"><span>${esc(o.label)}</span><small>${o.n} entr${o.n>1?'ies':'y'}</small></div>`).join('');if(q&&!exact)h+=`<div class="ac-item ac-new" data-v="${esc(q)}"><span>? Add new: "${esc(q)}"</span></div>`;if(!h){box.classList.add('hidden');return}box.innerHTML=h;box.classList.remove('hidden');box.querySelectorAll('.ac-item').forEach(el=>el.addEventListener('mousedown',e=>{e.preventDefault();pickRef(el.dataset.v)}))}
-
-function renderAll(){refreshFilterOptions();renderTable();renderDashboard();renderCustomTabs();renderAdminTabs()}$('pwdInput').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});let rsz;window.addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(renderDashboard,200)});const sess=sessionStorage.getItem('kpl_role');if(sess==='admin'||sess==='emp'){role=sess;showApp()}
-
-</script></body></html>
+/* ================= ENTERED BY / APP START ================= */
+function applyByLock(){
+  const e=$('fld_by');if(!e)return;const v=sessionStorage.getItem('kpl_by');
+  if(v){e.readOnly=true;e.title='Locked for this login. Logout to change.';if(!editingUid)e.value=v}else{e.readOnly=false;e.title=''}
+}
+function renderAll(){refreshFilterOptions();renderTable();renderDashboard();renderCustomTabs();renderAdminTabs()}
+$('pwdInput').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+let rsz;window.addEventListener('resize',()=>{clearTimeout(rsz);rsz=setTimeout(renderDashboard,200)});
+if(!SNAPSHOT_MODE){
+  const sess=sessionStorage.getItem('kpl_role');
+  if(sess==='admin'||sess==='emp'){role=sess;loadGoogleState().finally(showApp)}
+}
+</script>
+</body>
+</html>
