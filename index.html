@@ -60,8 +60,8 @@
     <h1>Welcome to Krishna Prakash Lab</h1>
     <p>Enhanced Data Updater</p>
     <div class="login-grid">
-      <div class="login-tile" onclick="chooseRole('admin')"><b>Admin Login</b><br><small>Full control and configuration</small></div>
-      <div class="login-tile" onclick="chooseRole('emp')"><b>EMP Login</b><br><small>Enter and edit data</small></div>
+      <div class="login-tile" data-login-role="admin"><b>Admin Login</b><br><small>Full control and configuration</small></div>
+      <div class="login-tile" data-login-role="emp"><b>EMP Login</b><br><small>Enter and edit data</small></div>
     </div>
   </div>
 </section>
@@ -74,6 +74,32 @@
     <div class="form-actions"><button class="btn" onclick="doLogin()">Login</button><button class="btn light" onclick="closeModal('pwdModal')">Cancel</button></div>
   </div>
 </div>
+
+<script>
+(function(){
+  window.kplOpenLogin=function(r){
+    try{
+      if(typeof window.chooseRole === 'function'){window.chooseRole(r);return;}
+      var modal=document.getElementById('pwdModal');
+      var title=document.getElementById('pwdTitle');
+      var input=document.getElementById('pwdInput');
+      var err=document.getElementById('pwdErr');
+      if(!modal||!input)return;
+      window.kplFallbackRole=r;
+      if(title)title.textContent=(r==='admin'?'Admin':'EMP')+' Login';
+      input.value='';
+      if(err)err.textContent='';
+      modal.classList.remove('hidden');
+      setTimeout(function(){input.focus();},0);
+    }catch(e){}
+  };
+  document.addEventListener('DOMContentLoaded',function(){
+    document.querySelectorAll('[data-login-role]').forEach(function(el){
+      el.addEventListener('click',function(){window.kplOpenLogin(el.getAttribute('data-login-role'));});
+    });
+  });
+})();
+</script>
 
 <section id="app" class="hidden">
   <header>
@@ -208,7 +234,7 @@ const PASS={admin:'Krishna@94',emp:'Durga143'};
 const K={r:'kpl_records3',s:'kpl_spends3',f:'kpl_fields3',t:'kpl_tabs3',d:'kpl_customdata3'};
 // Google Sheets backend. Deploy the companion Apps Script as a Web App and paste
 // its /exec URL below. The spreadsheet ID is already fixed in the Apps Script.
-const GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/AKfycbwJDuNW3JAk1HcRk1u4BT4fEWtHT9Tk325nLgQbFghpPS7L4G9pEg_3Ox1pyQAkGaCzTA/exec;
+const GOOGLE_APPS_SCRIPT_URL='PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
