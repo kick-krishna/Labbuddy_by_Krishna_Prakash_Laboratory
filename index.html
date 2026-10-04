@@ -225,7 +225,7 @@ const PASS={admin:'Krishna@94',emp:'Durga143'};
 const K={r:'kpl_records3',s:'kpl_spends3',f:'kpl_fields3',t:'kpl_tabs3',d:'kpl_customdata3'};
 // Google Sheets backend. Deploy the companion Apps Script as a Web App and paste
 // its /exec URL below. The spreadsheet ID is already fixed in the Apps Script.
-const GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/AKfycbwJDuNW3JAk1HcRk1u4BT4fEWtHT9Tk325nLgQbFghpPS7L4G9pEg_3Ox1pyQAkGaCzTA/exec;
+const GOOGLE_APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwJDuNW3JAk1HcRk1u4BT4fEWtHT9Tk325nLgQbFghpPS7L4G9pEg_3Ox1pyQAkGaCzTA/exec';
 const $=id=>document.getElementById(id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
